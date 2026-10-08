@@ -2,6 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  One component library, two themes. Components only reference semantic tokens
+  (bg-surface, text-ink, border-line, bg-accent, rounded-ui ...), so swapping the
+  wrapper class re-skins every screen consistently.
+    .theme-console    – JetBrains Mono blueprint look (admin / customer / vendor workspaces)
+    .theme-storefront – "Modern Clinical" teal look (public marketplace + auth)
+*/
+:root,
+.theme-console {
+  --font: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --c-canvas: 243 244 246; /* #F3F4F6 */
+  --c-surface: 255 255 255;
+  --c-soft: 250 250 250; /* #FAFAFA */
+  --c-ink: 17 24 39; /* #111827 */
+  --c-muted: 107 114 128; /* #6B7280 */
+  --c-subtle: 156 163 175; /* #9CA3AF */
+  --c-line: 229 231 235; /* #E5E7EB */
+  --c-accent: 17 24 39;
+  --c-accent-fg: 255 255 255;
+  --c-accent-soft: 243 244 246;
+  --c-secondary: 75 85 99;
+  --r-ui: 2px;
+  --r-card: 2px;
+}
+
+.theme-storefront {
+  --font: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --c-canvas: 255 255 255;
+  --c-surface: 255 255 255;
+  --c-soft: 249 250 251; /* #F9FAFB */
+  --c-ink: 28 28 28; /* #1C1C1C */
+  --c-muted: 107 114 128;
+  --c-subtle: 156 163 175;
+  --c-line: 243 244 246; /* #F3F4F6 */
+  --c-accent: 26 188 156; /* #1ABC9C */
+  --c-accent-fg: 255 255 255;
+  --c-accent-soft: 232 248 245;
+  --c-secondary: 52 152 219; /* #3498DB */
+  --r-ui: 12px;
+  --r-card: 16px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  font-family: var(--font), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.theme-root {
+  min-height: 100dvh;
+  background: rgb(var(--c-canvas));
+  color: rgb(var(--c-ink));
+  font-family: var(--font);
+}
+
+@layer components {
+  .label-caps {
+    @apply text-[10px] font-bold uppercase tracking-widest text-subtle;
+  }
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-1;
+  }
+  .card-hover {
+    @apply transition-all duration-ui ease-ui hover:-translate-y-1 hover:shadow-lift;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }

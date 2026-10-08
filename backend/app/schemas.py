@@ -36,6 +36,7 @@ class UserOut(BaseModel):
     email: str
     full_name: str
     role: str
+    is_active: bool = True
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -75,6 +76,19 @@ class VendorCreate(BaseModel):
     category: str | None = None
     location: str | None = None
     description: str | None = None
+    contact_email: str | None = None
+    phone: str | None = None
+    website: str | None = None
+
+
+class VendorUpdate(BaseModel):
+    company_name: str | None = None
+    category: str | None = None
+    location: str | None = None
+    description: str | None = None
+    contact_email: str | None = None
+    phone: str | None = None
+    website: str | None = None
 
 
 class VendorOut(BaseModel):
@@ -84,6 +98,10 @@ class VendorOut(BaseModel):
     category: str | None
     location: str | None
     description: str | None
+    status: str = "approved"
+    contact_email: str | None = None
+    phone: str | None = None
+    website: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -141,6 +159,16 @@ class VerificationAction(BaseModel):
     comment: str | None = None
 
 
+class CatalogItemCreate(BaseModel):
+    item_name: str = Field(min_length=2)
+    category: str | None = None
+    unit: str | None = "ea"
+    unit_price: Decimal | None = Field(default=None, ge=0)
+    available_quantity: Decimal | None = Field(default=None, ge=0)
+    specifications: dict | None = None
+    publish: bool = False
+
+
 class CatalogItemPatch(BaseModel):
     item_name: str | None = None
     category: str | None = None
@@ -176,6 +204,14 @@ class RoleUpdate(BaseModel):
     role: str = Field(pattern="^(customer|vendor|admin)$")
 
 
+class UserStatusUpdate(BaseModel):
+    is_active: bool
+
+
+class VendorStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(pending|approved|suspended)$")
+
+
 class AdminOverview(BaseModel):
     users: int
     customers: int
@@ -184,6 +220,11 @@ class AdminOverview(BaseModel):
     projects: int
     vendor_profiles: int
     open_flags: int
+    rfqs: int = 0
+    quotations: int = 0
+    catalog_items: int = 0
+    published_items: int = 0
+    documents: int = 0
 
 
 class AdminProjectOut(ProjectOut):

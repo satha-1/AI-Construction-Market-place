@@ -2,6 +2,7 @@ from app.models.agent import AgentRun, AgentToolCall
 from app.models.audit import AuditLog
 from app.models.boq import Boq, BoqItem, Estimate, EstimateLineItem
 from app.models.document import DocumentChunk, ProjectDocument
+from app.models.notification import Notification
 from app.models.project import Project
 from app.models.reference import ReferenceItem, ReferenceRate
 from app.models.requirement import ExtractedRequirement
@@ -32,6 +33,7 @@ __all__ = [
     "AgentRun",
     "AgentToolCall",
     "AuditLog",
+    "Notification",
     "ReferenceItem",
     "ReferenceRate",
 ]

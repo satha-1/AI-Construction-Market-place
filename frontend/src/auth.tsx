@@ -5,7 +5,8 @@ export const AuthContext = createContext<{
   user: User | null;
   setUser: (user: User | null) => void;
   ready: boolean;
-}>({ user: null, setUser: () => undefined, ready: false });
+  logout: () => void;
+}>({ user: null, setUser: () => undefined, ready: false, logout: () => undefined });
 
 export function useAuth() {
   return useContext(AuthContext);

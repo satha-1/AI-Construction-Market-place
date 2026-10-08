@@ -1,31 +1,53 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { api, clearToken, getToken, User } from "./api";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { api, clearToken, getToken, type Role, type User } from "./api";
 import { AuthContext } from "./auth";
-import Layout from "./components/Layout";
-import AgentChat from "./pages/AgentChat";
-import AuditPage from "./pages/AuditPage";
-import BoqPage from "./pages/BoqPage";
-import AdminPage from "./pages/AdminPage";
-import Login from "./pages/Login";
-import Marketplace from "./pages/Marketplace";
-import ProjectDetail from "./pages/ProjectDetail";
-import Projects from "./pages/Projects";
-import Register from "./pages/Register";
-import RfqPage from "./pages/RfqPage";
-import VendorPortal from "./pages/VendorPortal";
-import VerificationPage from "./pages/VerificationPage";
+import { LoadingBlock } from "./components/ui";
+import ConsoleLayout from "./layouts/ConsoleLayout";
+import StorefrontLayout from "./layouts/StorefrontLayout";
+import NotificationsPage from "./pages/NotificationsPage";
+import AdminAudit from "./pages/admin/AdminAudit";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminProjects from "./pages/admin/AdminProjects";
+import AdminRates from "./pages/admin/AdminRates";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVendors from "./pages/admin/AdminVendors";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import AgentTab from "./pages/customer/AgentTab";
+import AuditTab from "./pages/customer/AuditTab";
+import BoqTab from "./pages/customer/BoqTab";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import DocumentsTab from "./pages/customer/DocumentsTab";
+import ProjectWorkspace from "./pages/customer/ProjectWorkspace";
+import ProjectsPage from "./pages/customer/ProjectsPage";
+import RfqsTab from "./pages/customer/RfqsTab";
+import VerificationTab from "./pages/customer/VerificationTab";
+import MarketplaceHome from "./pages/market/MarketplaceHome";
+import VendorDirectory from "./pages/market/VendorDirectory";
+import VendorStorefront from "./pages/market/VendorStorefront";
+import RfqDetailPage from "./pages/rfq/RfqDetailPage";
+import VendorCatalog from "./pages/vendor/VendorCatalog";
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorGate from "./pages/vendor/VendorGate";
+import VendorProfile from "./pages/vendor/VendorProfile";
+import VendorQuotations from "./pages/vendor/VendorQuotations";
+import VendorRfqs from "./pages/vendor/VendorRfqs";
 import { homeFor } from "./roles";
 
-function Guard({ user, ready, children }: { user: User | null; ready: boolean; children: ReactNode }) {
-  if (!ready) return <p className="p-8">Loading…</p>;
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
+function RequireRole({ user, ready, roles }: { user: User | null; ready: boolean; roles: Role[] }): ReactNode {
+  const location = useLocation();
+  if (!ready) return <LoadingBlock />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  if (!roles.includes(user.role)) return <Navigate to={homeFor(user.role)} replace />;
+  return <Outlet />;
 }
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (!getToken()) {
@@ -42,30 +64,69 @@ export default function App() {
       .finally(() => setReady(true));
   }, []);
 
+  const logout = useCallback(() => {
+    clearToken();
+    setUser(null);
+    qc.clear();
+  }, [qc]);
+
+  const guard = (roles: Role[]) => <RequireRole user={user} ready={ready} roles={roles} />;
+
   return (
-    <AuthContext.Provider value={{ user, setUser, ready }}>
+    <AuthContext.Provider value={{ user, setUser, ready, logout }}>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          element={
-            <Guard user={user} ready={ready}>
-              <Layout />
-            </Guard>
-          }
-        >
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:projectId" element={<ProjectDetail />} />
-          <Route path="/projects/:projectId/agent" element={<AgentChat />} />
-          <Route path="/projects/:projectId/boq" element={<BoqPage />} />
-          <Route path="/projects/:projectId/verification" element={<VerificationPage />} />
-          <Route path="/projects/:projectId/rfqs" element={<RfqPage />} />
-          <Route path="/projects/:projectId/audit" element={<AuditPage />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/vendor" element={<VendorPortal />} />
+        <Route path="/login" element={user ? <Navigate to={homeFor(user.role)} replace /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to={homeFor(user.role)} replace /> : <Register />} />
+
+        {/* Public storefront */}
+        <Route element={<StorefrontLayout />}>
+          <Route path="/marketplace" element={<MarketplaceHome />} />
+          <Route path="/marketplace/vendors" element={<VendorDirectory />} />
+          <Route path="/marketplace/vendors/:vendorId" element={<VendorStorefront />} />
         </Route>
-        <Route path="*" element={<Navigate to={user ? homeFor(user.role) : "/login"} replace />} />
+
+        {/* Authenticated console (shared shell for every role) */}
+        <Route element={guard(["admin", "customer", "vendor"])}>
+          <Route element={<ConsoleLayout />}>
+            <Route path="/notifications" element={<NotificationsPage />} />
+
+            <Route element={guard(["admin"])}>
+              <Route path="/admin" element={<AdminOverview />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/vendors" element={<AdminVendors />} />
+              <Route path="/admin/projects" element={<AdminProjects />} />
+              <Route path="/admin/rates" element={<AdminRates />} />
+              <Route path="/admin/audit" element={<AdminAudit />} />
+            </Route>
+
+            <Route element={guard(["customer", "admin"])}>
+              <Route path="/dashboard" element={<CustomerDashboard />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:projectId" element={<ProjectWorkspace />}>
+                <Route index element={<DocumentsTab />} />
+                <Route path="boq" element={<BoqTab />} />
+                <Route path="verification" element={<VerificationTab />} />
+                <Route path="rfqs" element={<RfqsTab />} />
+                <Route path="agent" element={<AgentTab />} />
+                <Route path="audit" element={<AuditTab />} />
+              </Route>
+              <Route path="/projects/:projectId/rfqs/:rfqId" element={<RfqDetailPage />} />
+            </Route>
+
+            <Route element={guard(["vendor"])}>
+              <Route element={<VendorGate />}>
+                <Route path="/vendor" element={<VendorDashboard />} />
+                <Route path="/vendor/catalog" element={<VendorCatalog />} />
+                <Route path="/vendor/rfqs" element={<VendorRfqs />} />
+                <Route path="/vendor/rfqs/:rfqId" element={<RfqDetailPage />} />
+                <Route path="/vendor/quotations" element={<VendorQuotations />} />
+                <Route path="/vendor/profile" element={<VendorProfile />} />
+              </Route>
+            </Route>
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to={ready && user ? homeFor(user.role) : "/marketplace"} replace />} />
       </Routes>
     </AuthContext.Provider>
   );

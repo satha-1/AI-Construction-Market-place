@@ -12,7 +12,15 @@ from app.modules.audit.service import audit_logger
 from app.modules.documents import storage
 from app.modules.documents.tasks import enqueue_or_run_vendor
 from app.modules.rag.embeddings import embedding_client
-from app.schemas import CatalogItemPatch, DocumentOut, VendorCreate, VendorOut
+from app.models.rfq import Quotation, Rfq
+from app.schemas import (
+    CatalogItemCreate,
+    CatalogItemPatch,
+    DocumentOut,
+    VendorCreate,
+    VendorOut,
+    VendorUpdate,
+)
 
 router = APIRouter(prefix="/api/vendors", tags=["vendors"])
 
@@ -32,6 +40,9 @@ def create_vendor(
         category=payload.category,
         location=payload.location,
         description=payload.description,
+        contact_email=payload.contact_email,
+        phone=payload.phone,
+        website=payload.website,
     )
     db.add(vendor)
     db.flush()
@@ -230,3 +241,175 @@ def publish_catalog_item(
     )
     db.commit()
     return {"id": item.id, "is_published": True}
+
+
+def _owned_item(db: Session, item_id: UUID, user: User) -> VendorCatalogItem:
+    item = db.get(VendorCatalogItem, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Catalog item not found")
+    vendor = db.get(Vendor, item.vendor_id)
+    if vendor is None or (user.role != "admin" and vendor.user_id != user.id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return item
+
+
+@router.post("/catalog-items/{item_id}/unpublish")
+def unpublish_catalog_item(
+    item_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("vendor", "admin")),
+):
+    item = _owned_item(db, item_id, user)
+    item.is_published = False
+    audit_logger.log_event(
+        db,
+        actor_type="human",
+        action="catalog.unpublish",
+        entity_type="vendor_catalog_items",
+        entity_id=item.id,
+        user_id=user.id,
+        after={"item_name": item.item_name},
+    )
+    db.commit()
+    return {"id": item.id, "is_published": False}
+
+
+@router.delete("/catalog-items/{item_id}", status_code=204)
+def delete_catalog_item(
+    item_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("vendor", "admin")),
+):
+    item = _owned_item(db, item_id, user)
+    audit_logger.log_event(
+        db,
+        actor_type="human",
+        action="catalog.delete",
+        entity_type="vendor_catalog_items",
+        entity_id=item.id,
+        user_id=user.id,
+        before={"item_name": item.item_name},
+    )
+    db.delete(item)
+    db.commit()
+
+
+@router.patch("/{vendor_id}", response_model=VendorOut)
+def update_vendor(
+    vendor_id: UUID,
+    payload: VendorUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("vendor", "admin")),
+):
+    vendor = db.get(Vendor, vendor_id)
+    if vendor is None:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    if user.role != "admin" and vendor.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        if field == "company_name" and not value:
+            continue
+        setattr(vendor, field, value)
+    audit_logger.log_event(
+        db,
+        actor_type="human",
+        action="vendor.update",
+        entity_type="vendors",
+        entity_id=vendor.id,
+        user_id=user.id,
+        after=payload.model_dump(exclude_unset=True),
+    )
+    db.commit()
+    db.refresh(vendor)
+    return vendor
+
+
+@router.post("/{vendor_id}/catalog-items", status_code=201)
+def create_catalog_item(
+    vendor_id: UUID,
+    payload: CatalogItemCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("vendor", "admin")),
+):
+    vendor = db.get(Vendor, vendor_id)
+    if vendor is None:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    if user.role != "admin" and vendor.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    item = VendorCatalogItem(
+        vendor_id=vendor.id,
+        item_name=payload.item_name,
+        category=payload.category or vendor.category,
+        unit=payload.unit,
+        unit_price=payload.unit_price,
+        available_quantity=payload.available_quantity,
+        specifications=payload.specifications,
+        confidence_score=1,
+        is_verified=True,
+        is_published=payload.publish,
+        embedding=embedding_client.embed([f"{payload.item_name} {payload.category or vendor.category or ''}"])[0],
+    )
+    db.add(item)
+    db.flush()
+    audit_logger.log_event(
+        db,
+        actor_type="human",
+        action="catalog.create",
+        entity_type="vendor_catalog_items",
+        entity_id=item.id,
+        user_id=user.id,
+        after={"item_name": item.item_name, "published": item.is_published},
+    )
+    db.commit()
+    return {"id": item.id, "item_name": item.item_name, "is_published": item.is_published}
+
+
+@router.get("/{vendor_id}/documents")
+def list_vendor_documents(
+    vendor_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("vendor", "admin")),
+):
+    vendor = db.get(Vendor, vendor_id)
+    if vendor is None:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    if user.role != "admin" and vendor.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    docs = db.scalars(
+        select(VendorDocument).where(VendorDocument.vendor_id == vendor_id).order_by(VendorDocument.uploaded_at.desc())
+    ).all()
+    return [
+        {"id": d.id, "file_name": d.file_name, "file_type": d.file_type, "status": d.status, "uploaded_at": d.uploaded_at}
+        for d in docs
+    ]
+
+
+@router.get("/{vendor_id}/quotations")
+def vendor_quotations(
+    vendor_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_roles("vendor", "admin")),
+):
+    vendor = db.get(Vendor, vendor_id)
+    if vendor is None:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    if user.role != "admin" and vendor.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    quotes = db.scalars(
+        select(Quotation).where(Quotation.vendor_id == vendor_id).order_by(Quotation.submitted_at.desc())
+    ).all()
+    out = []
+    for q in quotes:
+        rfq = db.get(Rfq, q.rfq_id)
+        out.append(
+            {
+                "id": q.id,
+                "rfq_id": q.rfq_id,
+                "status": q.status,
+                "total_price": q.total_price,
+                "currency": q.currency,
+                "submitted_at": q.submitted_at,
+                "rfq_status": rfq.status if rfq else None,
+            }
+        )
+    return out

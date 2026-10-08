@@ -27,7 +27,21 @@ def get_current_user(
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is deactivated")
     return user
+
+
+def get_optional_user(
+    creds: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)],
+    db: Annotated[Session, Depends(get_db)],
+) -> User | None:
+    if creds is None:
+        return None
+    try:
+        return get_current_user(creds, db)
+    except HTTPException:
+        return None
 
 
 def require_roles(*roles: str):

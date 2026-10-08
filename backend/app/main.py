@@ -10,7 +10,10 @@ from app.modules.agent.router import router as agent_router
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.boq.router import router as boq_router
+from app.modules.dashboard.router import router as dashboard_router
 from app.modules.documents.router import router as documents_router
+from app.modules.marketplace.router import router as marketplace_router
+from app.modules.notifications.router import router as notifications_router
 from app.modules.projects.router import router as projects_router
 from app.modules.rfq.router import router as rfq_router
 from app.modules.vendors.router import router as vendors_router
@@ -49,6 +52,9 @@ app.include_router(boq_router)
 app.include_router(rfq_router)
 app.include_router(verification_router)
 app.include_router(audit_router)
+app.include_router(notifications_router)
+app.include_router(marketplace_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/api/health")

@@ -57,7 +57,26 @@ Uploads fall back to `backend/uploads/` when MinIO is unavailable. Document proc
 | Uncertainty flags + verification approve/correct/reject | Done |
 | Vendor catalog extract/publish + marketplace | Done |
 | Vendor matching (structured + semantic) | Done |
-| RFQ create, vendor inbox, quotation submit, compare | Done |
+| RFQ create, vendor inbox, quotation submit, compare, select | Done |
+| Notifications, role dashboards, public marketplace API | Done (migration `0004`) |
+| Admin: users (role/activate), vendor moderation, rates, global audit log | Done |
+
+## Frontend structure
+
+One shared component library (`src/components/ui`) and two CSS-variable themes (`src/index.css`):
+
+- **console** (JetBrains Mono blueprint) — admin, customer and vendor workspaces via `layouts/ConsoleLayout`.
+- **storefront** (Satoshi, teal) — public marketplace and auth via `layouts/StorefrontLayout`.
+
+| Routes | Role |
+|---|---|
+| `/marketplace`, `/marketplace/vendors[/:id]` | public |
+| `/admin`, `/admin/{users,vendors,projects,rates,audit}` | admin |
+| `/dashboard`, `/projects`, `/projects/:id/{boq,verification,rfqs,agent,audit}`, `/projects/:id/rfqs/:rfqId` | customer |
+| `/vendor`, `/vendor/{catalog,rfqs,rfqs/:id,quotations,profile}` | vendor |
+| `/notifications` | all signed-in |
+
+Run `alembic upgrade head` to apply migration `0004` before using the new screens.
 
 ## Demo path
 

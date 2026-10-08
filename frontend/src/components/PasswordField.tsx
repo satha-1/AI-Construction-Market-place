@@ -11,19 +11,11 @@ type Props = {
 };
 
 function EyeIcon({ open }: { open: boolean }) {
-  if (open) {
-    return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 12s3.5-6.5 8.5-6.5S20.5 12 20.5 12s-3.5 6.5-8.5 6.5S3.5 12 3.5 12Z" />
-        <circle cx="12" cy="12" r="2.75" />
-      </svg>
-    );
-  }
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 12s3.5-6.5 8.5-6.5S20.5 12 20.5 12s-3.5 6.5-8.5 6.5S3.5 12 3.5 12Z" />
       <circle cx="12" cy="12" r="2.75" />
-      <path strokeLinecap="round" d="M4 20 20 4" />
+      {open ? null : <path strokeLinecap="round" d="M4 20 20 4" />}
     </svg>
   );
 }
@@ -41,13 +33,15 @@ export default function PasswordField({
   const inputId = useId();
 
   return (
-    <label className="block text-sm font-medium text-slate-700" htmlFor={inputId}>
-      {label}
-      <div className="relative mt-1">
+    <div>
+      <label className="label-caps mb-1.5 block" htmlFor={inputId}>
+        {label}
+      </label>
+      <div className="relative">
         <input
           id={inputId}
           name={name}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 pr-11 outline-none ring-orange-400 transition focus:bg-white focus:ring-2"
+          className="min-h-[44px] w-full rounded-ui border border-line bg-surface px-3 pr-11 text-sm text-ink placeholder:text-subtle transition-colors duration-ui ease-ui hover:border-subtle focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
           required={required}
@@ -57,7 +51,7 @@ export default function PasswordField({
         />
         <button
           type="button"
-          className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 transition hover:text-orange-600"
+          className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition-colors hover:text-accent"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Hide password" : "Show password"}
           tabIndex={-1}
@@ -65,6 +59,6 @@ export default function PasswordField({
           <EyeIcon open={visible} />
         </button>
       </div>
-    </label>
+    </div>
   );
 }

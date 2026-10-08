@@ -44,6 +44,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == payload.email.lower()))
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated. Contact an administrator.")
     token = create_access_token(user_id=user.id, role=user.role, email=user.email)
     return TokenResponse(access_token=token)
 
