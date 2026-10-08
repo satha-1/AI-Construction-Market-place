@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     embedding_model: str = "text-embedding-3-small"
     cors_origins: str = "http://localhost:5173,http://localhost:8080"
+    admin_email: str = ""
+    admin_password: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

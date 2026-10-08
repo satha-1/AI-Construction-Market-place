@@ -12,20 +12,26 @@ const vendorLinks = [
   { to: "/marketplace", label: "Marketplace" },
 ];
 
+const adminLinks = [
+  { to: "/admin", label: "Admin" },
+  { to: "/projects", label: "Projects" },
+  { to: "/marketplace", label: "Marketplace" },
+];
+
 export default function Layout() {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
-  const links = user?.role === "vendor" ? vendorLinks : customerLinks;
+  const links = user?.role === "admin" ? adminLinks : user?.role === "vendor" ? vendorLinks : customerLinks;
 
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Conapp</p>
             <p className="text-lg font-semibold">Construction estimation</p>
           </div>
-          <nav className="flex items-center gap-4 text-sm">
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
             {links.map((link) => (
               <NavLink
                 key={link.to}

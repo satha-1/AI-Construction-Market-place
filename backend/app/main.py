@@ -1,7 +1,11 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.db.session import SessionLocal
+from app.modules.admin.router import router as admin_router
 from app.modules.agent.router import router as agent_router
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
@@ -10,9 +14,23 @@ from app.modules.documents.router import router as documents_router
 from app.modules.projects.router import router as projects_router
 from app.modules.rfq.router import router as rfq_router
 from app.modules.vendors.router import router as vendors_router
+from app.modules.auth.bootstrap import ensure_admin
 from app.modules.verification.router import router as verification_router
 
-app = FastAPI(title="Conapp API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    db = SessionLocal()
+    try:
+        ensure_admin(db)
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+    yield
+
+
+app = FastAPI(title="Conapp API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
@@ -22,6 +40,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(admin_router)
 app.include_router(projects_router)
 app.include_router(documents_router)
 app.include_router(vendors_router)

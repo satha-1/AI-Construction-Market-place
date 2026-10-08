@@ -2,9 +2,8 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pgvector.sqlalchemy import Vector
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import ARRAY, DOUBLE_PRECISION, JSONB, UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -59,7 +58,7 @@ class VendorCatalogItem(Base):
     confidence_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-    embedding = mapped_column(Vector(1536), nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(ARRAY(DOUBLE_PRECISION), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     vendor = relationship("Vendor", back_populates="catalog_items")

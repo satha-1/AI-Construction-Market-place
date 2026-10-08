@@ -7,7 +7,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+    # pgcrypto is bundled with PostgreSQL. pgvector is not installed on a
+    # stock Windows server, so embeddings are stored as double precision[]
+    # and ranked in application code.
     op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")
 
 

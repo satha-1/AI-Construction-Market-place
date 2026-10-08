@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -161,3 +161,38 @@ class QuotationCreate(BaseModel):
     vendor_id: UUID | None = None
     currency: str = "USD"
     lines: list[QuotationLineIn]
+
+
+class RoleUpdate(BaseModel):
+    role: str = Field(pattern="^(customer|vendor|admin)$")
+
+
+class AdminOverview(BaseModel):
+    users: int
+    customers: int
+    vendors: int
+    admins: int
+    projects: int
+    vendor_profiles: int
+    open_flags: int
+
+
+class AdminProjectOut(ProjectOut):
+    owner_email: str
+    owner_name: str
+
+
+class RateUpdate(BaseModel):
+    unit_rate: Decimal = Field(gt=0)
+    currency: str = Field(min_length=3, max_length=8)
+
+
+class AdminRateOut(BaseModel):
+    id: UUID
+    item_name: str
+    category: str
+    unit: str
+    default_formula: str
+    unit_rate: Decimal
+    currency: str
+    effective_date: date

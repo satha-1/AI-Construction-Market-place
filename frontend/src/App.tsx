@@ -6,6 +6,7 @@ import Layout from "./components/Layout";
 import AgentChat from "./pages/AgentChat";
 import AuditPage from "./pages/AuditPage";
 import BoqPage from "./pages/BoqPage";
+import AdminPage from "./pages/AdminPage";
 import Login from "./pages/Login";
 import Marketplace from "./pages/Marketplace";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -14,6 +15,7 @@ import Register from "./pages/Register";
 import RfqPage from "./pages/RfqPage";
 import VendorPortal from "./pages/VendorPortal";
 import VerificationPage from "./pages/VerificationPage";
+import { homeFor } from "./roles";
 
 function Guard({ user, ready, children }: { user: User | null; ready: boolean; children: ReactNode }) {
   if (!ready) return <p className="p-8">Loading…</p>;
@@ -52,6 +54,7 @@ export default function App() {
             </Guard>
           }
         >
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectId" element={<ProjectDetail />} />
           <Route path="/projects/:projectId/agent" element={<AgentChat />} />
@@ -62,7 +65,7 @@ export default function App() {
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/vendor" element={<VendorPortal />} />
         </Route>
-        <Route path="*" element={<Navigate to={user ? "/projects" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={user ? homeFor(user.role) : "/login"} replace />} />
       </Routes>
     </AuthContext.Provider>
   );

@@ -59,7 +59,7 @@ def upgrade() -> None:
             chunk_index integer NOT NULL,
             content text NOT NULL,
             metadata jsonb,
-            embedding vector(1536),
+            embedding double precision[],
             created_at timestamptz NOT NULL DEFAULT now()
         );
         CREATE INDEX ix_document_chunks_document_id ON document_chunks(document_id);
@@ -178,7 +178,7 @@ def upgrade() -> None:
             confidence_score numeric(5, 4),
             is_verified boolean NOT NULL DEFAULT false,
             is_published boolean NOT NULL DEFAULT false,
-            embedding vector(1536),
+            embedding double precision[],
             created_at timestamptz NOT NULL DEFAULT now()
         );
         CREATE INDEX ix_vendor_catalog_items_vendor_id ON vendor_catalog_items(vendor_id);
@@ -287,14 +287,6 @@ def upgrade() -> None:
             currency text NOT NULL DEFAULT 'USD',
             effective_date date NOT NULL DEFAULT CURRENT_DATE
         );
-        """
-    )
-    op.execute(
-        """
-        CREATE INDEX IF NOT EXISTS ix_document_chunks_embedding
-            ON document_chunks USING hnsw (embedding vector_cosine_ops);
-        CREATE INDEX IF NOT EXISTS ix_vendor_catalog_items_embedding
-            ON vendor_catalog_items USING hnsw (embedding vector_cosine_ops);
         """
     )
 

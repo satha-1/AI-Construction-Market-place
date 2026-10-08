@@ -3,6 +3,28 @@ export type User = {
   email: string;
   full_name: string;
   role: "customer" | "vendor" | "admin";
+  created_at?: string;
+};
+
+export type AdminOverview = {
+  users: number;
+  customers: number;
+  vendors: number;
+  admins: number;
+  projects: number;
+  vendor_profiles: number;
+  open_flags: number;
+};
+
+export type AdminRate = {
+  id: string;
+  item_name: string;
+  category: string;
+  unit: string;
+  default_formula: string;
+  unit_rate: string;
+  currency: string;
+  effective_date: string;
 };
 
 export type Project = {
@@ -15,6 +37,11 @@ export type Project = {
   location: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type AdminProject = Project & {
+  owner_email: string;
+  owner_name: string;
 };
 
 export type Document = {
@@ -93,6 +120,14 @@ export const api = {
   login: (payload: { email: string; password: string }) =>
     request<{ access_token: string }>("/api/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   me: () => request<User>("/api/auth/me"),
+  adminOverview: () => request<AdminOverview>("/api/admin/overview"),
+  adminUsers: () => request<User[]>("/api/admin/users"),
+  adminUpdateRole: (userId: string, role: string) =>
+    request<User>(`/api/admin/users/${userId}`, { method: "PATCH", body: JSON.stringify({ role }) }),
+  adminProjects: () => request<AdminProject[]>("/api/admin/projects"),
+  adminRates: () => request<AdminRate[]>("/api/admin/rates"),
+  adminUpdateRate: (rateId: string, payload: { unit_rate: number; currency: string }) =>
+    request<AdminRate>(`/api/admin/rates/${rateId}`, { method: "PATCH", body: JSON.stringify(payload) }),
   projects: () => request<Project[]>("/api/projects"),
   createProject: (payload: { name: string; description?: string; location?: string; budget_cap?: number }) =>
     request<Project>("/api/projects", { method: "POST", body: JSON.stringify(payload) }),
