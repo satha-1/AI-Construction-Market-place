@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
@@ -10,6 +10,15 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8)
     full_name: str
     role: str = Field(pattern="^(customer|vendor)$")
+
+    @field_validator("password")
+    @classmethod
+    def password_must_include_letters_and_numbers(cls, value: str) -> str:
+        if not any(ch.isalpha() for ch in value):
+            raise ValueError("Password must include at least one letter")
+        if not any(ch.isdigit() for ch in value):
+            raise ValueError("Password must include at least one number")
+        return value
 
 
 class LoginRequest(BaseModel):

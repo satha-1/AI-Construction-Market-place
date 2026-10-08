@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { api, setToken } from "../api";
 import { useAuth } from "../auth";
 import AuthShell from "../components/AuthShell";
+import PasswordField from "../components/PasswordField";
+import { passwordsMatch, validatePassword } from "../password";
 import { homeFor } from "../roles";
 
 const roles = [
@@ -24,6 +26,7 @@ export default function Register() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("customer");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -31,6 +34,19 @@ export default function Register() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    const matchError = passwordsMatch(password, confirmPassword);
+    if (matchError) {
+      setError(matchError);
+      return;
+    }
+
     setBusy(true);
     try {
       await api.register({ email, password, full_name: fullName, role });
@@ -82,19 +98,26 @@ export default function Register() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
-        <label className="block text-sm font-medium text-slate-700">
-          Password
-          <input
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none ring-orange-400 transition focus:bg-white focus:ring-2"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            placeholder="At least 8 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            if (error) setError("");
+          }}
+          autoComplete="new-password"
+          placeholder="Enter password"
+        />
+        <PasswordField
+          label="Confirm password"
+          value={confirmPassword}
+          onChange={(value) => {
+            setConfirmPassword(value);
+            if (error) setError("");
+          }}
+          autoComplete="new-password"
+          placeholder="Enter password"
+        />
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">I am a</legend>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">

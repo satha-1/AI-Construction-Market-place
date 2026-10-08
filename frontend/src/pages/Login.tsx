@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api, setToken } from "../api";
 import { useAuth } from "../auth";
 import AuthShell from "../components/AuthShell";
+import PasswordField from "../components/PasswordField";
 import { homeFor } from "../roles";
 
 export default function Login() {
@@ -56,18 +57,13 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
-        <label className="block text-sm font-medium text-slate-700">
-          Password
-          <input
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none ring-orange-400 transition focus:bg-white focus:ring-2"
-            type="password"
-            autoComplete="current-password"
-            required
-            placeholder="Your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          placeholder="Enter password"
+        />
         {error ? <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p> : null}
         <button
           className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-fuchsia-600 py-2.5 font-semibold text-white shadow-lg shadow-orange-500/30 transition hover:brightness-110 disabled:opacity-60"
