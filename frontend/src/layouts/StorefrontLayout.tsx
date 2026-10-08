@@ -1,18 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import { ButtonLink } from "../components/ui";
+import { cx } from "../lib/format";
 import { useTheme } from "../lib/theme";
 import { homeFor } from "../roles";
 
 export function Brand({ to = "/marketplace" }: { to?: string }) {
   return (
-    <Link to={to} className="flex items-center gap-2.5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-ui bg-accent text-sm font-black text-accent-fg">C</span>
-      <span className="text-lg font-black tracking-tight text-ink">Conapp</span>
+    <Link to={to} className="focus-ring flex items-center gap-2 rounded-ui" aria-label="Conapp home">
+      <span className="flex h-8 w-8 items-center justify-center rounded-ui bg-gradient-to-br from-accent to-secondary text-white shadow-sm">
+        <Icon name="building" className="h-[18px] w-[18px]" strokeWidth={2} />
+      </span>
+      <span className="text-xl font-black tracking-tight text-accent">Conapp</span>
     </Link>
   );
 }
@@ -41,15 +44,14 @@ function SearchBar() {
   }
 
   return (
-    <form onSubmit={submit} role="search" className="flex min-h-[48px] w-full items-stretch overflow-hidden rounded-ui border border-line bg-surface transition-colors duration-ui ease-ui focus-within:border-accent hover:border-subtle">
+    <form
+      onSubmit={submit}
+      role="search"
+      className="flex min-h-[48px] w-full items-stretch overflow-hidden rounded-ui border border-line bg-soft/60 transition-all duration-ui ease-ui focus-within:border-accent focus-within:bg-surface focus-within:ring-4 focus-within:ring-accent/10 hover:border-subtle"
+    >
       <label className="relative hidden w-[180px] shrink-0 items-center sm:flex">
-        <Icon name="pin" className="pointer-events-none absolute left-3 h-4 w-4 text-accent" />
-        <select
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          aria-label="Location"
-          className="h-full w-full appearance-none bg-transparent pl-9 pr-3 text-sm text-ink focus:outline-none"
-        >
+        <Icon name="pin" className="pointer-events-none absolute left-3.5 h-4 w-4 text-accent" />
+        <select value={location} onChange={(e) => setLocation(e.target.value)} aria-label="Location" className="h-full w-full cursor-pointer appearance-none bg-transparent pl-10 pr-3 text-sm text-ink focus:outline-none">
           <option value="">All locations</option>
           {locations.map((l) => (
             <option key={l} value={l}>
@@ -58,20 +60,22 @@ function SearchBar() {
           ))}
         </select>
       </label>
-      <span className="my-2 hidden w-px bg-line sm:block" aria-hidden="true" />
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search cement, steel, vendors…"
-        aria-label="Search materials"
-        className="min-w-0 flex-1 bg-transparent px-4 text-sm text-ink placeholder:text-subtle focus:outline-none"
-      />
-      <button type="submit" aria-label="Search" className="flex w-12 items-center justify-center bg-accent text-accent-fg transition-opacity hover:opacity-90">
-        <Icon name="search" className="h-5 w-5" />
+      <span className="my-2.5 hidden w-px bg-line sm:block" aria-hidden="true" />
+      <div className="relative flex min-w-0 flex-1 items-center">
+        <Icon name="search" className="pointer-events-none absolute left-3.5 h-4 w-4 text-subtle" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cement, steel, tiles or vendors" aria-label="Search materials" className="h-full w-full min-w-0 bg-transparent pl-10 pr-4 text-sm text-ink placeholder:text-subtle focus:outline-none" />
+      </div>
+      <button type="submit" className="sr-only">
+        Search
       </button>
     </form>
   );
 }
+
+const navLinks: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+  { to: "/marketplace", label: "Materials", icon: "box", end: true },
+  { to: "/marketplace/vendors", label: "Vendors", icon: "store" },
+];
 
 export default function StorefrontLayout() {
   useTheme("storefront");
@@ -79,32 +83,38 @@ export default function StorefrontLayout() {
   return (
     <div className="theme-root flex flex-col">
       <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 md:h-16 lg:h-[72px] lg:gap-6 lg:px-8">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 md:h-16 lg:h-[72px] lg:gap-8 lg:px-8">
           <Brand />
-          <div className="hidden flex-1 md:block lg:mx-6">
+          <div className="hidden max-w-2xl flex-1 md:block">
             <SearchBar />
           </div>
           <nav className="ml-auto flex items-center gap-1 sm:gap-2" aria-label="Main">
-            <Link to="/marketplace/vendors" className="hidden min-h-[44px] items-center rounded-ui px-3 text-sm font-medium text-muted transition-colors hover:text-ink sm:inline-flex">
-              Vendors
-            </Link>
+            {navLinks.map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                end={l.end}
+                className={({ isActive }) => cx("hidden min-h-[44px] items-center gap-1.5 rounded-ui px-3 text-sm font-medium transition-colors lg:inline-flex", isActive ? "text-accent" : "text-muted hover:text-ink")}
+              >
+                <Icon name={l.icon} className="h-4 w-4" />
+                {l.label}
+              </NavLink>
+            ))}
             {user ? (
-              <ButtonLink to={homeFor(user.role)} size="md">
-                Workspace
+              <ButtonLink to={homeFor(user.role)} icon="dashboard">
+                My workspace
               </ButtonLink>
             ) : (
               <>
                 <Link to="/login" className="inline-flex min-h-[44px] items-center rounded-ui px-3 text-sm font-medium text-ink transition-colors hover:text-accent">
                   Log in
                 </Link>
-                <ButtonLink to="/register" size="md">
-                  Sign up
-                </ButtonLink>
+                <ButtonLink to="/register">Sign up</ButtonLink>
               </>
             )}
           </nav>
         </div>
-        <div className="border-t border-line px-4 pb-3 pt-3 md:hidden">
+        <div className="border-t border-line px-4 py-3 md:hidden">
           <SearchBar />
         </div>
       </header>
@@ -117,9 +127,14 @@ export default function StorefrontLayout() {
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
           <div>
             <Brand />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
-              AI-assisted construction estimation with a verified vendor marketplace. Estimate, source and compare in one place.
-            </p>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">AI-assisted construction estimation with a verified vendor marketplace. Estimate, source and compare in one place.</p>
+            <div className="mt-5 flex gap-2">
+              {(["mail", "phone", "globe"] as IconName[]).map((i) => (
+                <span key={i} className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-muted">
+                  <Icon name={i} className="h-4 w-4" />
+                </span>
+              ))}
+            </div>
           </div>
           <FooterColumn
             title="Marketplace"
@@ -129,14 +144,14 @@ export default function StorefrontLayout() {
             ]}
           />
           <FooterColumn
-            title="Workspace"
+            title="Customers"
             links={[
               { to: "/register", label: "Create an account" },
               { to: "/login", label: "Log in" },
             ]}
           />
           <FooterColumn
-            title="For vendors"
+            title="Vendors"
             links={[
               { to: "/register", label: "Become a vendor" },
               { to: "/login", label: "Vendor portal" },

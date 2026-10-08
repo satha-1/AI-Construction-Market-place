@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api, type AdminVendor } from "../../api";
-import { DataTable, EmptyState, ErrorNote, LoadingBlock, PageHeader, SearchInput, Select, StatusBadge, useToast, type Column } from "../../components/ui";
+import { Icon } from "../../components/Icon";
+import { DataTable, EmptyState, EntityCell, ErrorNote, LoadingBlock, PageHeader, SearchInput, Select, StatCard, StatusBadge, useToast, type Column } from "../../components/ui";
 import { dateShort, errorMessage } from "../../lib/format";
+import { categoryVisual } from "../../lib/visuals";
 
 export default function AdminVendors() {
   const qc = useQueryClient();
@@ -31,24 +33,31 @@ export default function AdminVendors() {
     {
       key: "company",
       header: "Company",
-      render: (v) => (
-        <div>
-          <p className="font-bold">{v.company_name}</p>
-          <p className="text-[11px] text-muted">{[v.category, v.location].filter(Boolean).join(" · ") || "—"}</p>
-        </div>
-      ),
+      render: (v) => {
+        const visual = categoryVisual(v.category ?? v.company_name);
+        return <EntityCell icon={visual.icon} tone={visual.tone} title={v.company_name} subtitle={[v.category, v.location].filter(Boolean).join(" · ") || "—"} />;
+      },
     },
     {
       key: "owner",
       header: "Owner",
       render: (v) => (
-        <div>
-          <p>{v.owner_name}</p>
-          <p className="text-[11px] text-muted">{v.owner_email}</p>
+        <div className="min-w-0">
+          <p className="truncate font-medium">{v.owner_name}</p>
+          <p className="truncate text-xs text-muted">{v.owner_email}</p>
         </div>
       ),
     },
-    { key: "items", header: "Catalog", render: (v) => `${v.published_items}/${v.catalog_items} published` },
+    {
+      key: "items",
+      header: "Catalog",
+      render: (v) => (
+        <span className="inline-flex items-center gap-1.5 text-sm">
+          <Icon name="box" className="h-4 w-4 text-subtle" />
+          {v.published_items}/{v.catalog_items} published
+        </span>
+      ),
+    },
     { key: "status", header: "Status", render: (v) => <StatusBadge status={v.status} /> },
     { key: "created", header: "Created", render: (v) => <span className="text-muted">{dateShort(v.created_at)}</span> },
     {
@@ -59,7 +68,7 @@ export default function AdminVendors() {
         <Select
           aria-label={`Status for ${v.company_name}`}
           value={v.status}
-          className="!min-h-[36px] ml-auto max-w-[140px] text-xs"
+          className="!min-h-[36px] ml-auto max-w-[150px]"
           onChange={(e) => setVendorStatus.mutate({ id: v.id, status: e.target.value })}
         >
           <option value="pending">Pending</option>
@@ -72,7 +81,12 @@ export default function AdminVendors() {
 
   return (
     <>
-      <PageHeader eyebrow="Admin" title="Vendors" description="Only approved vendors appear in the public marketplace and can be invited to RFQs." />
+      <PageHeader icon="store" tone="blue" title="Vendors" description="Only approved vendors appear in the public marketplace and can be invited to RFQs." />
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard icon="clock" tone="amber" label="Pending" value={data.filter((v) => v.status === "pending").length} />
+        <StatCard icon="checkCircle" tone="emerald" label="Approved" value={data.filter((v) => v.status === "approved").length} />
+        <StatCard icon="alert" tone="rose" label="Suspended" value={data.filter((v) => v.status === "suspended").length} />
+      </div>
       <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_200px]">
         <SearchInput value={search} onChange={setSearch} placeholder="Search company or owner email" />
         <Select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -86,7 +100,7 @@ export default function AdminVendors() {
       {isLoading ? (
         <LoadingBlock />
       ) : (
-        <DataTable columns={columns} rows={rows} rowKey={(v) => v.id} empty={<EmptyState pattern="blocks" title="No vendors found" description="Vendor profiles appear here once vendors complete onboarding." />} />
+        <DataTable columns={columns} rows={rows} rowKey={(v) => v.id} empty={<EmptyState icon="store" tone="blue" title="No vendors found" description="Vendor profiles appear here once vendors complete onboarding." />} />
       )}
     </>
   );

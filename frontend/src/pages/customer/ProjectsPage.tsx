@@ -2,10 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api";
-import { Button, Card, EmptyState, ErrorNote, GeoPattern, Input, LoadingBlock, Modal, PageHeader, SearchInput, StatusBadge, Textarea, useToast, type PatternVariant } from "../../components/ui";
+import { Icon } from "../../components/Icon";
+import { Button, Card, EmptyState, ErrorNote, IconTile, Input, LoadingBlock, Modal, PageHeader, SearchInput, StatusBadge, Textarea, useToast } from "../../components/ui";
 import { dateShort, errorMessage, money } from "../../lib/format";
-
-const patterns: PatternVariant[] = ["blocks", "grid", "circles", "diagonal", "arcs"];
+import { toneFor } from "../../lib/visuals";
 
 export default function ProjectsPage() {
   const qc = useQueryClient();
@@ -48,41 +48,63 @@ export default function ProjectsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Customer"
+        icon="folder"
         title="Projects"
         description="Each project holds its documents, BOQ, estimate, RFQs and a complete audit trail."
-        actions={<Button onClick={() => setOpen(true)}>New project</Button>}
+        actions={
+          <>
+            <SearchInput className="w-full sm:w-64" value={search} onChange={setSearch} placeholder="Search projects" />
+            <Button icon="plus" onClick={() => setOpen(true)}>
+              New project
+            </Button>
+          </>
+        }
       />
-      <SearchInput className="mb-6 max-w-md" value={search} onChange={setSearch} placeholder="Search projects" />
       <ErrorNote error={error} />
       {isLoading ? (
         <LoadingBlock />
       ) : rows.length === 0 ? (
-        <EmptyState title={data.length ? "No matching projects" : "No projects yet"} description="Create a project, then upload drawings or BOQ files to begin." action={<Button onClick={() => setOpen(true)}>New project</Button>} />
+        <EmptyState
+          icon="folder"
+          title={data.length ? "No matching projects" : "No projects yet"}
+          description="Create a project, then upload drawings or BOQ files to begin."
+          action={
+            <Button icon="plus" onClick={() => setOpen(true)}>
+              New project
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {rows.map((p, i) => (
-            <Link key={p.id} to={`/projects/${p.id}`} className="focus-ring block rounded-card">
-              <Card hoverable padded={false} className="group h-full overflow-hidden">
-                <div className="relative aspect-video border-b border-line bg-soft">
-                  <GeoPattern variant={patterns[i % patterns.length]} className="h-full w-full text-subtle transition-transform duration-ui ease-ui group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 transition-opacity duration-ui group-hover:opacity-100" />
-                  <div className="absolute left-3 top-3">
+          {rows.map((p) => {
+            const tone = toneFor(p.id);
+            return (
+              <Link key={p.id} to={`/projects/${p.id}`} className="focus-ring block rounded-card">
+                <Card hoverable className="group flex h-full flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <IconTile icon="building" tone={tone} size="lg" className="transition-transform duration-ui ease-ui group-hover:scale-105" />
                     <StatusBadge status={p.status} />
                   </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="truncate text-sm font-bold text-ink">{p.name}</h3>
-                  <p className="mt-1 line-clamp-2 min-h-[2rem] text-[11px] leading-relaxed text-muted">{p.description || "No description"}</p>
-                  <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-[11px] text-muted">
-                    <span>{p.location ?? "—"}</span>
-                    <span>{money(p.budget_cap)}</span>
+                  <h3 className="mt-4 truncate text-base font-bold text-ink">{p.name}</h3>
+                  <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-sm text-muted">{p.description || "No description"}</p>
+                  <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4 text-sm">
+                    <span className="flex min-w-0 items-center gap-1.5 text-muted">
+                      <Icon name="pin" className="h-4 w-4 shrink-0 text-subtle" />
+                      <span className="truncate">{p.location ?? "No location"}</span>
+                    </span>
+                    <span className="flex items-center justify-end gap-1.5 font-semibold text-ink">
+                      <Icon name="tag" className="h-4 w-4 text-subtle" />
+                      {money(p.budget_cap)}
+                    </span>
                   </div>
-                  <p className="mt-1 text-[10px] text-subtle">Updated {dateShort(p.updated_at)}</p>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                  <p className="mt-3 flex items-center gap-1.5 text-xs text-subtle">
+                    <Icon name="clock" className="h-3.5 w-3.5" />
+                    Updated {dateShort(p.updated_at)}
+                  </p>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
       )}
 

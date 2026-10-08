@@ -7,27 +7,53 @@ export function homeFor(role: string) {
 }
 
 export type NavItem = { to: string; label: string; icon: IconName; end?: boolean };
+export type NavSection = { title: string; items: NavItem[] };
 
-export const navFor: Record<string, NavItem[]> = {
+export const navFor: Record<string, NavSection[]> = {
   admin: [
-    { to: "/admin", label: "Overview", icon: "dashboard", end: true },
-    { to: "/admin/users", label: "Users", icon: "users" },
-    { to: "/admin/vendors", label: "Vendors", icon: "store" },
-    { to: "/admin/projects", label: "Projects", icon: "folder" },
-    { to: "/admin/rates", label: "Reference rates", icon: "rates" },
-    { to: "/admin/audit", label: "Audit log", icon: "audit" },
+    { title: "Overview", items: [{ to: "/admin", label: "Dashboard", icon: "dashboard", end: true }] },
+    {
+      title: "Management",
+      items: [
+        { to: "/admin/users", label: "Users", icon: "users" },
+        { to: "/admin/vendors", label: "Vendors", icon: "store" },
+        { to: "/admin/projects", label: "Projects", icon: "folder" },
+      ],
+    },
+    {
+      title: "System",
+      items: [
+        { to: "/admin/rates", label: "Reference rates", icon: "calculator" },
+        { to: "/admin/audit", label: "Audit log", icon: "shieldCheck" },
+      ],
+    },
   ],
   customer: [
-    { to: "/dashboard", label: "Dashboard", icon: "dashboard", end: true },
-    { to: "/projects", label: "Projects", icon: "folder" },
-    { to: "/notifications", label: "Notifications", icon: "bell" },
+    {
+      title: "Workspace",
+      items: [
+        { to: "/dashboard", label: "Dashboard", icon: "dashboard", end: true },
+        { to: "/projects", label: "Projects", icon: "folder" },
+      ],
+    },
+    { title: "Account", items: [{ to: "/notifications", label: "Notifications", icon: "bell" }] },
   ],
   vendor: [
-    { to: "/vendor", label: "Dashboard", icon: "dashboard", end: true },
-    { to: "/vendor/catalog", label: "Catalog", icon: "box" },
-    { to: "/vendor/rfqs", label: "RFQ inbox", icon: "mail" },
-    { to: "/vendor/quotations", label: "My quotations", icon: "quote" },
-    { to: "/vendor/profile", label: "Company profile", icon: "profile" },
-    { to: "/notifications", label: "Notifications", icon: "bell" },
+    { title: "Overview", items: [{ to: "/vendor", label: "Dashboard", icon: "dashboard", end: true }] },
+    {
+      title: "Sales",
+      items: [
+        { to: "/vendor/catalog", label: "Catalog", icon: "box" },
+        { to: "/vendor/rfqs", label: "RFQ inbox", icon: "inbox" },
+        { to: "/vendor/quotations", label: "My quotations", icon: "file" },
+      ],
+    },
+    {
+      title: "Account",
+      items: [
+        { to: "/vendor/profile", label: "Company profile", icon: "building" },
+        { to: "/notifications", label: "Notifications", icon: "bell" },
+      ],
+    },
   ],
 };

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api, type AdminProject } from "../../api";
-import { DataTable, EmptyState, ErrorNote, LoadingBlock, PageHeader, SearchInput, StatusBadge, type Column } from "../../components/ui";
+import { DataTable, EmptyState, EntityCell, ErrorNote, LoadingBlock, PageHeader, SearchInput, StatusBadge, type Column } from "../../components/ui";
 import { dateShort, money } from "../../lib/format";
+import { toneFor } from "../../lib/visuals";
 
 export default function AdminProjects() {
   const [search, setSearch] = useState("");
@@ -16,22 +17,12 @@ export default function AdminProjects() {
     {
       key: "name",
       header: "Project",
-      render: (p) => (
-        <div>
-          <p className="font-bold">{p.name}</p>
-          <p className="text-[11px] text-muted">{p.location ?? "No location"}</p>
-        </div>
-      ),
+      render: (p) => <EntityCell icon="folder" tone={toneFor(p.id)} title={p.name} subtitle={p.location ?? "No location"} />,
     },
     {
       key: "owner",
       header: "Owner",
-      render: (p) => (
-        <div>
-          <p>{p.owner_name}</p>
-          <p className="text-[11px] text-muted">{p.owner_email}</p>
-        </div>
-      ),
+      render: (p) => <EntityCell avatar={p.owner_name} title={p.owner_name} subtitle={p.owner_email} />,
     },
     { key: "status", header: "Status", render: (p) => <StatusBadge status={p.status} /> },
     { key: "budget", header: "Budget cap", align: "right", render: (p) => money(p.budget_cap) },
@@ -40,10 +31,9 @@ export default function AdminProjects() {
 
   return (
     <>
-      <PageHeader eyebrow="Admin" title="Projects" description="Read-only view of every project across customers." />
-      <SearchInput className="mb-4 max-w-md" value={search} onChange={setSearch} placeholder="Search project or owner email" />
+      <PageHeader icon="folder" tone="blue" title="Projects" description="Read-only view of every project across customers." actions={<SearchInput className="w-full sm:w-80" value={search} onChange={setSearch} placeholder="Search project or owner email" />} />
       <ErrorNote error={error} />
-      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(p) => p.id} empty={<EmptyState title="No projects" description="Projects created by customers will appear here." />} />}
+      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(p) => p.id} empty={<EmptyState icon="folder" tone="blue" title="No projects" description="Projects created by customers will appear here." />} />}
     </>
   );
 }

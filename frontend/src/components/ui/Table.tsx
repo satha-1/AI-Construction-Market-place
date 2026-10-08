@@ -1,5 +1,25 @@
 import type { ReactNode } from "react";
-import { cx } from "../../lib/format";
+import { cx, initials } from "../../lib/format";
+import { toneClasses, toneFor, type Tone } from "../../lib/visuals";
+import type { IconName } from "../Icon";
+import { IconTile } from "./Card";
+
+/** Leading cell with an icon tile (or initials avatar), a title and a subtitle. */
+export function EntityCell({ title, subtitle, icon, tone, avatar }: { title: ReactNode; subtitle?: ReactNode; icon?: IconName; tone?: Tone; avatar?: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      {icon ? (
+        <IconTile icon={icon} tone={tone} size="md" round />
+      ) : avatar !== undefined ? (
+        <span className={cx("flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold", toneClasses[tone ?? toneFor(avatar)].tile)}>{initials(avatar)}</span>
+      ) : null}
+      <div className="min-w-0">
+        <p className="truncate font-semibold text-ink">{title}</p>
+        {subtitle ? <p className="truncate text-xs text-muted">{subtitle}</p> : null}
+      </div>
+    </div>
+  );
+}
 
 export type Column<T> = {
   key: string;
@@ -24,12 +44,12 @@ export function DataTable<T>({
 }) {
   if (rows.length === 0 && empty) return <>{empty}</>;
   return (
-    <div className="overflow-x-auto rounded-card border border-line bg-surface">
-      <table className="w-full min-w-[640px] border-collapse text-left text-xs">
+    <div className="overflow-x-auto rounded-card border border-line bg-surface shadow-card">
+      <table className="w-full min-w-[680px] border-collapse text-left text-sm">
         <thead>
-          <tr className="border-b border-line bg-soft">
+          <tr className="border-b border-line bg-soft/70">
             {columns.map((c) => (
-              <th key={c.key} scope="col" className={cx("label-caps px-4 py-3 font-bold", c.align === "right" && "text-right")}>
+              <th key={c.key} scope="col" className={cx("px-5 py-3 text-xs font-semibold text-muted", c.align === "right" && "text-right")}>
                 {c.header}
               </th>
             ))}
@@ -40,13 +60,10 @@ export function DataTable<T>({
             <tr
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={cx(
-                "border-b border-line last:border-0 transition-colors duration-ui ease-ui hover:bg-soft",
-                onRowClick && "cursor-pointer",
-              )}
+              className={cx("border-b border-line transition-colors duration-ui ease-ui last:border-0 hover:bg-soft/70", onRowClick && "cursor-pointer")}
             >
               {columns.map((c) => (
-                <td key={c.key} className={cx("px-4 py-3 align-middle text-ink", c.align === "right" && "text-right", c.className)}>
+                <td key={c.key} className={cx("px-5 py-3.5 align-middle text-ink", c.align === "right" && "text-right", c.className)}>
                   {c.render(row)}
                 </td>
               ))}

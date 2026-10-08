@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { GeoPattern } from "./ui";
 import { Brand } from "../layouts/StorefrontLayout";
 import { useTheme } from "../lib/theme";
+import { Icon, type IconName } from "./Icon";
 
 type Props = {
   title: string;
@@ -10,24 +10,38 @@ type Props = {
   footer: ReactNode;
 };
 
+const perks: { icon: IconName; title: string; text: string }[] = [
+  { icon: "upload", title: "Upload drawings", text: "PDFs, scans and spreadsheets are parsed automatically." },
+  { icon: "calculator", title: "Instant BOQ & estimate", text: "Deterministic quantities and costs, with human review." },
+  { icon: "store", title: "Verified vendors", text: "Request quotes and compare them side by side." },
+];
+
 export default function AuthShell({ title, subtitle, children, footer }: Props) {
   useTheme("storefront");
   return (
-    <div className="theme-root flex items-center justify-center bg-soft px-4 py-8 sm:px-6">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-card border border-line bg-surface shadow-lift lg:grid-cols-[1.05fr_1fr]">
-        <aside className="relative hidden flex-col justify-between overflow-hidden bg-accent p-10 text-accent-fg lg:flex">
-          <GeoPattern variant="blocks" className="absolute inset-0 h-full w-full text-white opacity-25" />
-          <div className="relative">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/80">Conapp</p>
-            <h2 className="mt-6 text-4xl font-black leading-tight">Estimate faster. Source smarter.</h2>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/90">
-              AI construction estimation and a vendor marketplace in one workspace — projects, BOQs, and quotations.
-            </p>
+    <div className="theme-root flex items-center justify-center bg-gradient-to-br from-accent-soft via-surface to-sky-50 px-4 py-8 sm:px-6">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-card border border-line bg-surface shadow-lift lg:grid-cols-[1fr_1.05fr]">
+        <aside className="relative hidden flex-col justify-between bg-gradient-to-br from-accent to-secondary p-10 text-white lg:flex">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
+              <Icon name="sparkles" className="h-3.5 w-3.5" /> AI construction marketplace
+            </span>
+            <h2 className="mt-6 text-4xl font-black leading-tight">Estimate faster.
+              <br />
+              Source smarter.</h2>
           </div>
-          <ul className="relative space-y-3 text-sm">
-            <li className="rounded-ui bg-white/15 px-4 py-3 backdrop-blur">Upload drawings and generate a BOQ</li>
-            <li className="rounded-ui bg-white/15 px-4 py-3 backdrop-blur">Match vendors against your quantities</li>
-            <li className="rounded-ui bg-white/15 px-4 py-3 backdrop-blur">Compare quotations in one place</li>
+          <ul className="space-y-4">
+            {perks.map((p) => (
+              <li key={p.title} className="flex items-start gap-4 rounded-card bg-white/10 p-4 backdrop-blur">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-accent">
+                  <Icon name={p.icon} className="h-5 w-5" />
+                </span>
+                <span>
+                  <span className="block text-sm font-bold">{p.title}</span>
+                  <span className="mt-0.5 block text-sm text-white/85">{p.text}</span>
+                </span>
+              </li>
+            ))}
           </ul>
         </aside>
 

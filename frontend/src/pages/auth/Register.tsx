@@ -4,14 +4,14 @@ import { api, setToken } from "../../api";
 import { useAuth } from "../../auth";
 import AuthShell from "../../components/AuthShell";
 import PasswordField from "../../components/PasswordField";
-import { Button, ErrorNote, Input } from "../../components/ui";
+import { Button, ErrorNote, IconTile, Input } from "../../components/ui";
 import { cx } from "../../lib/format";
 import { passwordsMatch, validatePassword } from "../../password";
 import { homeFor } from "../../roles";
 
 const roles = [
-  { value: "customer", title: "Customer", detail: "Create projects, estimates, and RFQs" },
-  { value: "vendor", title: "Vendor", detail: "Publish a catalog and answer RFQs" },
+  { value: "customer", title: "Customer", detail: "Create projects, estimates, and RFQs", icon: "briefcase" as const, tone: "teal" as const },
+  { value: "vendor", title: "Vendor", detail: "Publish a catalog and answer RFQs", icon: "store" as const, tone: "blue" as const },
 ];
 
 export default function Register() {
@@ -67,7 +67,7 @@ export default function Register() {
         <PasswordField label="Password" value={password} onChange={(v) => { setPassword(v); setError(null); }} autoComplete="new-password" placeholder="Enter password" />
         <PasswordField label="Confirm password" value={confirmPassword} onChange={(v) => { setConfirmPassword(v); setError(null); }} autoComplete="new-password" placeholder="Enter password" />
         <fieldset>
-          <legend className="label-caps mb-1.5">I am a</legend>
+          <legend className="mb-1.5 text-sm font-medium text-ink">I am a</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             {roles.map((option) => {
               const selected = role === option.value;
@@ -78,12 +78,15 @@ export default function Register() {
                   aria-pressed={selected}
                   onClick={() => setRole(option.value)}
                   className={cx(
-                    "focus-ring min-h-[44px] rounded-ui border px-4 py-3 text-left transition-all duration-ui ease-ui",
-                    selected ? "border-accent bg-accent-soft" : "border-line bg-surface hover:border-subtle",
+                    "focus-ring flex min-h-[44px] items-start gap-3 rounded-card border px-4 py-3 text-left transition-all duration-ui ease-ui",
+                    selected ? "border-accent bg-accent-soft ring-4 ring-accent/10" : "border-line bg-surface hover:border-subtle",
                   )}
                 >
-                  <span className="block text-sm font-bold text-ink">{option.title}</span>
-                  <span className="mt-1 block text-xs text-muted">{option.detail}</span>
+                  <IconTile icon={option.icon} tone={option.tone} size="md" round />
+                  <span>
+                    <span className="block text-sm font-bold text-ink">{option.title}</span>
+                    <span className="mt-0.5 block text-xs text-muted">{option.detail}</span>
+                  </span>
                 </button>
               );
             })}

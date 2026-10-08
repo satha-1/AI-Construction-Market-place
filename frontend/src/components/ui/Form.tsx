@@ -9,8 +9,8 @@ import {
 import { cx } from "../../lib/format";
 
 const control =
-  "w-full rounded-ui border border-line bg-surface px-3 text-sm text-ink placeholder:text-subtle " +
-  "transition-colors duration-ui ease-ui hover:border-subtle focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 " +
+  "w-full rounded-ui border border-line bg-surface px-3.5 text-sm text-ink placeholder:text-subtle shadow-card " +
+  "transition-colors duration-ui ease-ui hover:border-subtle focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10 " +
   "disabled:cursor-not-allowed disabled:bg-soft disabled:text-muted";
 
 export function Field({
@@ -31,12 +31,12 @@ export function Field({
   return (
     <div className={cx("block", className)}>
       {label ? (
-        <label htmlFor={htmlFor} className="label-caps mb-1.5 block">
+        <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-ink">
           {label}
         </label>
       ) : null}
       {children}
-      {error ? <p className="mt-1 text-[11px] text-danger">{error}</p> : hint ? <p className="mt-1 text-[11px] text-muted">{hint}</p> : null}
+      {error ? <p className="mt-1 text-xs text-rose-600">{error}</p> : hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
     </div>
   );
 }
@@ -101,7 +101,7 @@ export function SearchInput({
 }) {
   return (
     <div className={cx("relative", className)}>
-      <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="11" cy="11" r="7" />
         <path d="m20 20-3.5-3.5" strokeLinecap="round" />
       </svg>
@@ -111,7 +111,7 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className={cx(control, "min-h-[44px] pl-9")}
+        className={cx(control, "min-h-[44px] pl-10")}
       />
     </div>
   );

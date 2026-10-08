@@ -11,7 +11,7 @@ export default function VendorGate() {
   if (!vendor)
     return (
       <>
-        <Hero pattern="blocks" eyebrow="Vendor onboarding" title="Set up your company profile" description="Tell buyers who you are. Once saved you can build a catalog, receive RFQs and send quotations." />
+        <Hero icon="building" eyebrow="Vendor onboarding" title="Set up your company profile" description="Tell buyers who you are. Once saved you can build a catalog, receive RFQs and send quotations." />
         <Card className="max-w-2xl">
           <VendorProfileForm vendor={null} />
         </Card>

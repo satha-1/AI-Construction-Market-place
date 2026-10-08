@@ -23,7 +23,7 @@ export default {
         info: "#2563EB",
       },
       fontFamily: {
-        sans: ["var(--font)", "ui-monospace", "system-ui", "sans-serif"],
+        sans: ["var(--font)", "system-ui", "sans-serif"],
         display: ["var(--font)", "system-ui", "sans-serif"],
       },
       borderRadius: {
@@ -32,6 +32,7 @@ export default {
       },
       boxShadow: {
         lift: "0 12px 30px rgba(0,0,0,0.08)",
+        card: "0 1px 2px rgba(16,24,40,0.04)",
       },
       transitionTimingFunction: {
         ui: "cubic-bezier(0.4, 0, 0.2, 1)",

@@ -61,7 +61,7 @@ export default function VendorProfileForm({ vendor, onSaved }: { vendor: Vendor 
       <Input label="Website" type="url" placeholder="https://" {...field("website")} />
       <Textarea label="About the company" {...field("description")} />
       <ErrorNote error={save.error} />
-      <Button type="submit" loading={save.isPending} disabled={!form.company_name.trim()}>
+      <Button type="submit" icon="check" loading={save.isPending} disabled={!form.company_name.trim()}>
         {vendor ? "Save changes" : "Create vendor profile"}
       </Button>
     </form>

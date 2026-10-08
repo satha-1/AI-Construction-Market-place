@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api, type AdminRate } from "../../api";
-import { Button, DataTable, EmptyState, ErrorNote, Input, LoadingBlock, Modal, PageHeader, SearchInput, useToast, type Column } from "../../components/ui";
+import { Button, DataTable, EmptyState, EntityCell, ErrorNote, Input, LoadingBlock, Modal, PageHeader, SearchInput, useToast, type Column } from "../../components/ui";
 import { dateShort, errorMessage, money } from "../../lib/format";
+import { categoryVisual } from "../../lib/visuals";
 
 export default function AdminRates() {
   const qc = useQueryClient();
@@ -35,18 +36,24 @@ export default function AdminRates() {
   }
 
   const columns: Column<AdminRate>[] = [
-    { key: "item", header: "Item", render: (r) => <span className="font-bold">{r.item_name}</span> },
-    { key: "category", header: "Category", render: (r) => <span className="text-muted">{r.category}</span> },
+    {
+      key: "item",
+      header: "Item",
+      render: (r) => {
+        const v = categoryVisual(r.category || r.item_name);
+        return <EntityCell icon={v.icon} tone={v.tone} title={r.item_name} subtitle={r.category} />;
+      },
+    },
     { key: "unit", header: "Unit", render: (r) => r.unit },
     { key: "formula", header: "Formula", render: (r) => <span className="text-muted">{r.default_formula}</span> },
-    { key: "rate", header: "Unit rate", align: "right", render: (r) => money(r.unit_rate, r.currency) },
+    { key: "rate", header: "Unit rate", align: "right", render: (r) => <span className="font-semibold">{money(r.unit_rate, r.currency)}</span> },
     { key: "date", header: "Effective", render: (r) => <span className="text-muted">{dateShort(r.effective_date)}</span> },
     {
       key: "actions",
       header: "",
       align: "right",
       render: (r) => (
-        <Button size="sm" variant="secondary" onClick={() => edit(r)}>
+        <Button size="sm" variant="secondary" icon="edit" onClick={() => edit(r)}>
           Edit
         </Button>
       ),
@@ -55,10 +62,15 @@ export default function AdminRates() {
 
   return (
     <>
-      <PageHeader eyebrow="Admin" title="Reference rates" description="Deterministic unit rates used by the cost calculator. Changes are audit-logged." />
-      <SearchInput className="mb-4 max-w-md" value={search} onChange={setSearch} placeholder="Search item or category" />
+      <PageHeader
+        icon="calculator"
+        tone="violet"
+        title="Reference rates"
+        description="Deterministic unit rates used by the cost calculator. Changes are audit-logged."
+        actions={<SearchInput className="w-full sm:w-80" value={search} onChange={setSearch} placeholder="Search item or category" />}
+      />
       <ErrorNote error={error} />
-      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} empty={<EmptyState pattern="diagonal" title="No reference rates" />} />}
+      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} empty={<EmptyState icon="calculator" tone="violet" title="No reference rates" />} />}
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}

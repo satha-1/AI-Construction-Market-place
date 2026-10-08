@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { api, type CatalogItem } from "../../api";
-import { Badge, Button, Card, CardHeader, DataTable, EmptyState, ErrorNote, Input, LoadingBlock, Modal, PageHeader, useToast, type Column } from "../../components/ui";
+import { Badge, Button, Card, CardHeader, DataTable, EmptyState, EntityCell, ErrorNote, Input, LoadingBlock, Modal, PageHeader, StatCard, useToast, type Column } from "../../components/ui";
 import { errorMessage, money, percent, qty } from "../../lib/format";
+import { categoryVisual } from "../../lib/visuals";
 import { useVendor } from "./useVendor";
 
 type Draft = { id?: string; item_name: string; category: string; unit: string; unit_price: string; available_quantity: string };
@@ -56,26 +57,51 @@ export default function VendorCatalog() {
     onError,
   });
 
+  const published = data.filter((i) => i.is_published).length;
   const columns: Column<CatalogItem>[] = [
-    { key: "name", header: "Item", render: (i) => <span className="font-bold">{i.item_name}</span> },
-    { key: "cat", header: "Category", render: (i) => <span className="text-muted">{i.category ?? "—"}</span> },
-    { key: "price", header: "Unit price", align: "right", render: (i) => `${money(i.unit_price)}${i.unit ? ` / ${i.unit}` : ""}` },
+    {
+      key: "name",
+      header: "Item",
+      render: (i) => {
+        const v = categoryVisual(i.category || i.item_name);
+        return <EntityCell icon={v.icon} tone={v.tone} title={i.item_name} subtitle={i.category ?? "Uncategorised"} />;
+      },
+    },
+    {
+      key: "price",
+      header: "Unit price",
+      align: "right",
+      render: (i) => (
+        <span>
+          <span className="font-semibold text-ink">{money(i.unit_price)}</span>
+          {i.unit ? <span className="text-muted"> / {i.unit}</span> : null}
+        </span>
+      ),
+    },
     { key: "qty", header: "In stock", align: "right", render: (i) => qty(i.available_quantity) },
     { key: "conf", header: "Confidence", render: (i) => <span className="text-muted">{percent(i.confidence_score)}</span> },
-    { key: "status", header: "Status", render: (i) => <Badge tone={i.is_published ? "success" : "neutral"}>{i.is_published ? "Published" : "Draft"}</Badge> },
+    {
+      key: "status",
+      header: "Status",
+      render: (i) => (
+        <Badge dot tone={i.is_published ? "success" : "neutral"}>
+          {i.is_published ? "Published" : "Draft"}
+        </Badge>
+      ),
+    },
     {
       key: "actions",
       header: "",
       align: "right",
       render: (i) => (
         <div className="flex justify-end gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setDraft({ id: i.id, item_name: i.item_name, category: i.category ?? "", unit: i.unit ?? "", unit_price: i.unit_price?.toString() ?? "", available_quantity: i.available_quantity?.toString() ?? "" })}>
+          <Button size="sm" variant="secondary" icon="edit" onClick={() => setDraft({ id: i.id, item_name: i.item_name, category: i.category ?? "", unit: i.unit ?? "", unit_price: i.unit_price?.toString() ?? "", available_quantity: i.available_quantity?.toString() ?? "" })}>
             Edit
           </Button>
-          <Button size="sm" variant={i.is_published ? "ghost" : "primary"} loading={publish.isPending && publish.variables?.id === i.id} onClick={() => publish.mutate(i)}>
+          <Button size="sm" variant={i.is_published ? "ghost" : "soft"} icon={i.is_published ? "eye" : "globe"} loading={publish.isPending && publish.variables?.id === i.id} onClick={() => publish.mutate(i)}>
             {i.is_published ? "Unpublish" : "Publish"}
           </Button>
-          <Button size="sm" variant="danger" onClick={() => window.confirm(`Delete "${i.item_name}"?`) && remove.mutate(i)}>
+          <Button size="sm" variant="danger" icon="trash" aria-label={`Delete ${i.item_name}`} onClick={() => window.confirm(`Delete "${i.item_name}"?`) && remove.mutate(i)}>
             Delete
           </Button>
         </div>
@@ -85,13 +111,34 @@ export default function VendorCatalog() {
 
   return (
     <>
-      <PageHeader eyebrow="Vendor" title="Catalog" description="Only published items are visible in the marketplace and eligible for matching." actions={<Button onClick={() => setDraft(blank)}>Add item</Button>} />
+      <PageHeader
+        icon="box"
+        title="Catalog"
+        description="Only published items are visible in the marketplace and eligible for matching."
+        actions={
+          <Button icon="plus" onClick={() => setDraft(blank)}>
+            Add item
+          </Button>
+        }
+      />
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Total items" value={data.length} icon="box" tone="teal" />
+        <StatCard label="Published" value={published} hint="Visible in the marketplace" icon="globe" tone="emerald" />
+        <StatCard label="Drafts" value={data.length - published} hint="Review and publish" icon="edit" tone="amber" />
+      </div>
       <Card className="mb-6">
-        <CardHeader title="Import from a document" description="Upload a price list (PDF, Excel, CSV). Extracted items arrive as drafts for you to review and publish." />
+        <CardHeader icon="upload" tone="blue" title="Import from a document" description="Upload a price list (PDF, Excel, CSV). Extracted items arrive as drafts for you to review and publish." />
         <div className="flex flex-wrap items-center gap-3">
-          <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.csv" aria-label="Catalog document" className="min-h-[44px] max-w-full flex-1 rounded-ui border border-dashed border-line bg-soft px-3 py-2.5 text-xs text-muted file:mr-3 file:rounded-ui file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-[11px] file:font-bold file:uppercase file:text-accent-fg" />
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.png,.jpg,.jpeg,.xlsx,.csv"
+            aria-label="Catalog document"
+            className="min-h-[48px] max-w-full flex-1 rounded-ui border-2 border-dashed border-line bg-soft px-3 py-2.5 text-sm text-muted transition-colors hover:border-accent/40 file:mr-3 file:rounded-ui file:border-0 file:bg-accent-soft file:px-3.5 file:py-1.5 file:text-sm file:font-semibold file:text-teal-700"
+          />
           <Button
             variant="secondary"
+            icon="upload"
             loading={upload.isPending}
             onClick={() => {
               const f = fileRef.current?.files?.[0];
@@ -104,7 +151,7 @@ export default function VendorCatalog() {
         </div>
       </Card>
       <ErrorNote error={error} />
-      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={data} rowKey={(i) => i.id} empty={<EmptyState pattern="blocks" title="Your catalog is empty" description="Add items manually or import a price list." action={<Button onClick={() => setDraft(blank)}>Add item</Button>} />} />}
+      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={data} rowKey={(i) => i.id} empty={<EmptyState icon="box" title="Your catalog is empty" description="Add items manually or import a price list." action={<Button icon="plus" onClick={() => setDraft(blank)}>Add item</Button>} />} />}
 
       <Modal
         open={!!draft}

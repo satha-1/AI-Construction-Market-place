@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api, type AuditEntry } from "../../api";
-import { Badge, Button, DataTable, EmptyState, ErrorNote, Input, LoadingBlock, PageHeader, Select, type Column } from "../../components/ui";
+import { ActorBadge, Badge, Button, DataTable, EmptyState, ErrorNote, Input, LoadingBlock, PageHeader, Select, type Column } from "../../components/ui";
 import { dateTime, percent, titleCase } from "../../lib/format";
 
 const PAGE = 25;
@@ -21,10 +21,10 @@ export default function AdminAudit() {
 
   const columns: Column<AuditEntry>[] = [
     { key: "time", header: "When", render: (a) => <span className="whitespace-nowrap text-muted">{dateTime(a.created_at)}</span> },
-    { key: "action", header: "Action", render: (a) => <span className="font-bold">{titleCase(a.action)}</span> },
-    { key: "actor", header: "Actor", render: (a) => <Badge tone={a.actor_type === "ai" ? "info" : "neutral"}>{a.actor_type}</Badge> },
+    { key: "action", header: "Action", render: (a) => <span className="font-semibold">{titleCase(a.action)}</span> },
+    { key: "actor", header: "Actor", render: (a) => <ActorBadge actor={a.actor_type} /> },
     { key: "user", header: "User", render: (a) => <span className="text-muted">{a.user_email ?? "system"}</span> },
-    { key: "entity", header: "Entity", render: (a) => <span className="text-muted">{a.entity_type}</span> },
+    { key: "entity", header: "Entity", render: (a) => <Badge>{titleCase(a.entity_type)}</Badge> },
     { key: "conf", header: "Confidence", align: "right", render: (a) => percent(a.confidence_score) },
   ];
 
@@ -35,7 +35,7 @@ export default function AdminAudit() {
 
   return (
     <>
-      <PageHeader eyebrow="Admin" title="Audit log" description="Immutable trail of AI and human actions across the platform." />
+      <PageHeader icon="shieldCheck" tone="emerald" title="Audit log" description="Immutable trail of AI and human actions across the platform." />
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Input aria-label="Action contains" placeholder="Action contains… e.g. rfq" value={action} onChange={(e) => reset(setAction)(e.target.value)} />
         <Select aria-label="Actor type" value={actor} onChange={(e) => reset(setActor)(e.target.value)}>
@@ -51,13 +51,13 @@ export default function AdminAudit() {
         <LoadingBlock />
       ) : (
         <>
-          <DataTable columns={columns} rows={data.items} rowKey={(a) => a.id} empty={<EmptyState pattern="grid" title="No audit entries match" />} />
-          <div className="mt-4 flex items-center justify-between text-xs text-muted">
+          <DataTable columns={columns} rows={data.items} rowKey={(a) => a.id} empty={<EmptyState icon="shieldCheck" tone="emerald" title="No audit entries match" />} />
+          <div className="mt-4 flex items-center justify-between text-sm text-muted">
             <span>
               {total} entries · page {page + 1} of {pages} {isFetching ? "· updating…" : ""}
             </span>
             <div className="flex gap-2">
-              <Button size="sm" variant="secondary" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+              <Button size="sm" variant="secondary" icon="arrowLeft" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
                 Previous
               </Button>
               <Button size="sm" variant="secondary" disabled={page + 1 >= pages} onClick={() => setPage((p) => p + 1)}>

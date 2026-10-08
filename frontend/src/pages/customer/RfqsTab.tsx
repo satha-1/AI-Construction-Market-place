@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, type RfqSummary } from "../../api";
-import { Badge, Button, DataTable, EmptyState, ErrorNote, Input, LoadingBlock, Modal, StatusBadge, useToast, type Column } from "../../components/ui";
+import { Icon } from "../../components/Icon";
+import { Badge, Button, DataTable, EmptyState, EntityCell, ErrorNote, IconTile, Input, LoadingBlock, Modal, StatusBadge, useToast, type Column } from "../../components/ui";
 import { cx, dateShort, errorMessage, percent } from "../../lib/format";
+import { categoryVisual } from "../../lib/visuals";
 import { useProjectId } from "./ProjectWorkspace";
 
 export default function RfqsTab() {
@@ -57,11 +59,16 @@ export default function RfqsTab() {
 
   const hasBoq = (boq.data?.items.length ?? 0) > 0;
   const columns: Column<RfqSummary>[] = [
-    { key: "id", header: "RFQ", render: (r) => <span className="font-bold">#{r.id.slice(0, 8)}</span> },
+    { key: "id", header: "RFQ", render: (r) => <EntityCell icon="inbox" tone="blue" title={`#${r.id.slice(0, 8)}`} subtitle={`${r.line_count} BOQ items`} /> },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
     { key: "lines", header: "Items", align: "right", render: (r) => r.line_count },
     { key: "vendors", header: "Vendors", align: "right", render: (r) => r.vendor_count ?? 0 },
-    { key: "quotes", header: "Quotations", align: "right", render: (r) => r.quotation_count ?? 0 },
+    {
+      key: "quotes",
+      header: "Quotations",
+      align: "right",
+      render: (r) => (r.quotation_count ? <Badge tone="accent" icon="file">{r.quotation_count}</Badge> : <span className="text-subtle">0</span>),
+    },
     { key: "deadline", header: "Deadline", render: (r) => <span className="text-muted">{dateShort(r.deadline)}</span> },
     { key: "created", header: "Created", render: (r) => <span className="text-muted">{dateShort(r.created_at)}</span> },
   ];
@@ -69,8 +76,8 @@ export default function RfqsTab() {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-xl text-xs leading-relaxed text-muted">Send your BOQ to vendors, compare their quotations side by side and pick a winner. Selection is always a human decision.</p>
-        <Button disabled={!hasBoq} onClick={() => setOpen(true)} title={hasBoq ? undefined : "Generate a BOQ first"}>
+        <p className="max-w-xl text-sm text-muted">Send your BOQ to vendors, compare their quotations side by side and pick a winner. Selection is always a human decision.</p>
+        <Button icon="plus" disabled={!hasBoq} onClick={() => setOpen(true)} title={hasBoq ? undefined : "Generate a BOQ first"}>
           New RFQ
         </Button>
       </div>
@@ -83,7 +90,7 @@ export default function RfqsTab() {
           rows={rfqs.data ?? []}
           rowKey={(r) => r.id}
           onRowClick={(r) => navigate(`/projects/${projectId}/rfqs/${r.id}`)}
-          empty={<EmptyState pattern="arcs" title="No RFQs yet" description={hasBoq ? "Create an RFQ to request quotations from vendors." : "Generate a BOQ first, then request quotations."} />}
+          empty={<EmptyState icon="inbox" tone="blue" title="No RFQs yet" description={hasBoq ? "Create an RFQ to request quotations from vendors." : "Generate a BOQ first, then request quotations."} />}
         />
       )}
 
@@ -97,13 +104,13 @@ export default function RfqsTab() {
             <Button variant="secondary" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button loading={create.isPending} disabled={selected.size === 0} onClick={() => create.mutate()}>
+            <Button icon="arrowRight" loading={create.isPending} disabled={selected.size === 0} onClick={() => create.mutate()}>
               Send to {selected.size || "…"} vendor{selected.size === 1 ? "" : "s"}
             </Button>
           </>
         }
       >
-        <p className="mb-4 text-xs text-muted">All {boq.data?.items.length ?? 0} BOQ items will be included. Vendors are ranked by how well their catalog matches your BOQ.</p>
+        <p className="mb-4 text-sm text-muted">All {boq.data?.items.length ?? 0} BOQ items will be included. Vendors are ranked by how well their catalog matches your BOQ.</p>
         <Input label="Quote deadline (optional)" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} wrapperClassName="mb-5 max-w-xs" />
         {vendors.isLoading || matches.isPending ? <LoadingBlock label="Matching vendors" /> : null}
         <ErrorNote error={vendors.error} />
@@ -111,6 +118,7 @@ export default function RfqsTab() {
           {ordered.map((v) => {
             const on = selected.has(v.id);
             const score = bestScore.get(v.id);
+            const visual = categoryVisual(v.category);
             return (
               <li key={v.id}>
                 <button
@@ -122,19 +130,24 @@ export default function RfqsTab() {
                     on ? "border-accent bg-accent-soft" : "border-line hover:border-subtle",
                   )}
                 >
-                  <span>
-                    <span className="block text-xs font-bold text-ink">{v.company_name}</span>
-                    <span className="block text-[11px] text-muted">{[v.category, v.location].filter(Boolean).join(" · ") || "—"}</span>
+                  <span className="flex min-w-0 items-center gap-3">
+                    <IconTile icon={visual.icon} tone={visual.tone} />
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-ink">{v.company_name}</span>
+                      <span className="block truncate text-xs text-muted">{[v.category, v.location].filter(Boolean).join(" · ") || "—"}</span>
+                    </span>
                   </span>
-                  <span className="flex items-center gap-2">
-                    {score !== undefined ? <Badge tone="success">Match {percent(score)}</Badge> : null}
-                    <span className={cx("flex h-5 w-5 items-center justify-center rounded-ui border text-[10px]", on ? "border-accent bg-accent text-accent-fg" : "border-line")}>{on ? "✓" : ""}</span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {score !== undefined ? <Badge tone="success" icon="sparkles">Match {percent(score)}</Badge> : null}
+                    <span className={cx("flex h-5 w-5 items-center justify-center rounded-md border transition-colors", on ? "border-accent bg-accent text-accent-fg" : "border-line bg-surface")}>
+                      {on ? <Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.5} /> : null}
+                    </span>
                   </span>
                 </button>
               </li>
             );
           })}
-          {!vendors.isLoading && ordered.length === 0 ? <li className="py-6 text-center text-xs text-muted">No approved vendors available yet.</li> : null}
+          {!vendors.isLoading && ordered.length === 0 ? <li className="py-6 text-center text-sm text-muted">No approved vendors available yet.</li> : null}
         </ul>
       </Modal>
     </>

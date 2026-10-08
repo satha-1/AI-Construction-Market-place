@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { api, type BoqItem } from "../../api";
-import { Badge, Button, Card, DataTable, EmptyState, ErrorNote, Input, LoadingBlock, Modal, StatCard, useToast, type Column } from "../../components/ui";
+import { Icon } from "../../components/Icon";
+import { Badge, Button, DataTable, EmptyState, EntityCell, ErrorNote, Input, LoadingBlock, Modal, StatCard, useToast, type Column } from "../../components/ui";
 import { errorMessage, money, percent, qty } from "../../lib/format";
+import { categoryVisual } from "../../lib/visuals";
 import { useProjectId } from "./ProjectWorkspace";
 
 export default function BoqTab() {
@@ -53,16 +55,30 @@ export default function BoqTab() {
   const total = estimate.data?.estimate;
 
   const columns: Column<BoqItem>[] = [
-    { key: "name", header: "Item", render: (i) => <span className="font-bold">{i.item_name}</span> },
-    { key: "cat", header: "Category", render: (i) => <span className="text-muted">{i.category ?? "—"}</span> },
+    {
+      key: "name",
+      header: "Item",
+      render: (i) => {
+        const v = categoryVisual(i.category || i.item_name);
+        return <EntityCell icon={v.icon} tone={v.tone} title={i.item_name} subtitle={i.category ?? "Uncategorised"} />;
+      },
+    },
     { key: "qty", header: "Qty", align: "right", render: (i) => `${qty(i.quantity)} ${i.unit ?? ""}` },
     { key: "rate", header: "Unit rate", align: "right", render: (i) => (lineByItem.get(i.id) ? money(lineByItem.get(i.id)!.unit_rate) : "—") },
-    { key: "total", header: "Line total", align: "right", render: (i) => <span className="font-bold">{lineByItem.get(i.id) ? money(lineByItem.get(i.id)!.line_total) : "—"}</span> },
+    { key: "total", header: "Line total", align: "right", render: (i) => <span className="font-semibold">{lineByItem.get(i.id) ? money(lineByItem.get(i.id)!.line_total) : "—"}</span> },
     {
       key: "conf",
       header: "Confidence",
       render: (i) =>
-        i.is_verified ? <Badge tone="success">Verified</Badge> : <Badge tone={Number(i.confidence_score ?? 0) < 0.7 ? "warning" : "neutral"}>{percent(i.confidence_score)}</Badge>,
+        i.is_verified ? (
+          <Badge tone="success" icon="checkCircle">
+            Verified
+          </Badge>
+        ) : (
+          <Badge tone={Number(i.confidence_score ?? 0) < 0.7 ? "warning" : "info"} icon={Number(i.confidence_score ?? 0) < 0.7 ? "alert" : "sparkles"}>
+            {percent(i.confidence_score)}
+          </Badge>
+        ),
     },
     {
       key: "actions",
@@ -72,6 +88,7 @@ export default function BoqTab() {
         <Button
           size="sm"
           variant="secondary"
+          icon="edit"
           onClick={() => {
             setEditing(i);
             setValue(String(i.quantity ?? ""));
@@ -86,14 +103,15 @@ export default function BoqTab() {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-xl text-xs leading-relaxed text-muted">
+        <p className="flex max-w-xl items-start gap-2 text-sm text-muted">
+          <Icon name="shieldCheck" className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
           Quantities and costs are computed deterministically from reference rates. Low-confidence items are flagged for human verification.
         </p>
         <div className="flex gap-2">
-          <Button variant="secondary" loading={generate.isPending} onClick={() => generate.mutate()}>
+          <Button variant="secondary" icon="sparkles" loading={generate.isPending} onClick={() => generate.mutate()}>
             {boq.data?.boq ? "Regenerate BOQ" : "Generate BOQ"}
           </Button>
-          <Button loading={calculate.isPending} disabled={items.length === 0} onClick={() => calculate.mutate()}>
+          <Button icon="calculator" loading={calculate.isPending} disabled={items.length === 0} onClick={() => calculate.mutate()}>
             Calculate estimate
           </Button>
         </div>
@@ -105,18 +123,16 @@ export default function BoqTab() {
       ) : (
         <>
           <div className="mb-6 grid gap-4 sm:grid-cols-3">
-            <StatCard label="BOQ items" value={items.length} hint={boq.data?.boq ? `Version ${boq.data.boq.version} · ${boq.data.boq.status}` : "Not generated"} pattern="blocks" />
-            <StatCard label="Verified items" value={items.filter((i) => i.is_verified).length} pattern="grid" />
-            <StatCard label="Estimated total" value={total ? money(total.total_cost, total.currency) : "—"} hint={total ? `Estimate v${total.version ?? 1}` : "Not calculated"} pattern="arcs" />
+            <StatCard label="BOQ items" value={items.length} hint={boq.data?.boq ? `Version ${boq.data.boq.version} · ${boq.data.boq.status}` : "Not generated"} icon="layers" tone="blue" />
+            <StatCard label="Verified items" value={items.filter((i) => i.is_verified).length} hint={`of ${items.length} items`} icon="checkCircle" tone="emerald" />
+            <StatCard label="Estimated total" value={total ? money(total.total_cost, total.currency) : "—"} hint={total ? `Estimate v${total.version ?? 1}` : "Not calculated"} icon="calculator" tone="violet" />
           </div>
-          <Card padded={false} className="border-0 bg-transparent">
-            <DataTable
-              columns={columns}
-              rows={items}
-              rowKey={(i) => i.id}
-              empty={<EmptyState pattern="blocks" title="No BOQ yet" description="Upload and process documents, then generate a BOQ to see itemised quantities." />}
-            />
-          </Card>
+          <DataTable
+            columns={columns}
+            rows={items}
+            rowKey={(i) => i.id}
+            empty={<EmptyState icon="calculator" tone="violet" title="No BOQ yet" description="Upload and process documents, then generate a BOQ to see itemised quantities." />}
+          />
         </>
       )}
 
@@ -135,7 +151,7 @@ export default function BoqTab() {
           </>
         }
       >
-        <p className="mb-4 text-xs text-muted">{editing?.item_name}</p>
+        <p className="mb-4 text-sm text-muted">{editing?.item_name}</p>
         <Input label={`Quantity (${editing?.unit ?? "unit"})`} type="number" min="0" step="any" value={value} onChange={(e) => setValue(e.target.value)} />
       </Modal>
     </>
