@@ -50,13 +50,22 @@ body {
 
 @layer components {
   .label-caps {
-    @apply text-[11px] font-semibold uppercase tracking-wider text-subtle;
+    @apply text-[11px] font-semibold uppercase tracking-wider;
+    color: rgb(var(--c-subtle));
   }
   .focus-ring {
-    @apply outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2;
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+  }
+  .focus-ring:focus-visible {
+    --tw-ring-color: rgb(var(--c-accent) / 0.4);
   }
   .card-hover {
-    @apply transition-all duration-ui ease-ui hover:-translate-y-1 hover:shadow-lift;
+    @apply transition-all hover:-translate-y-1;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-hover:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   }
 }
 
