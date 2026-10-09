@@ -1,0 +1,36 @@
+{
+  "corpus": [
+    {"id": "c1", "text": "Brick masonry wall length 5.2m width 3.1m external elevation ground floor"},
+    {"id": "c2", "text": "Reinforced concrete slab thickness 150mm span 4m with TMT rebar mesh"},
+    {"id": "c3", "text": "Interior emulsion paint two coats on plastered walls living and bedrooms"},
+    {"id": "c4", "text": "Timber door set 900x2100mm hardwood frame and shutter complete"},
+    {"id": "c5", "text": "Aluminum window sliding 1200x1400mm with clear glass"},
+    {"id": "c6", "text": "Ceramic flooring tiles 600x600mm living room area 45 square metres"},
+    {"id": "c7", "text": "Electrical wiring PVC cable 2.5mm for lighting circuits and power points"},
+    {"id": "c8", "text": "Plumbing PVC pipe 32mm cold water supply and gate valves"},
+    {"id": "c9", "text": "Gypsum board false ceiling grid with LED panel cutouts"},
+    {"id": "c10", "text": "Excavation for strip foundation depth 1.2m width 0.6m"},
+    {"id": "c11", "text": "OPC cement 42.5 grade bags for concrete mix and masonry mortar"},
+    {"id": "c12", "text": "Structural steel beams UB 203x133 for mezzanine floor framing"},
+    {"id": "c13", "text": "Waterproofing membrane to wet areas bathrooms and balcony"},
+    {"id": "c14", "text": "Site photo notes: incomplete rebar cages at column C3 awaiting inspection"},
+    {"id": "c15", "text": "BOQ line: supply and fix ceramic wall tiles to bathroom wet walls"}
+  ],
+  "queries": [
+    {"query": "brick wall dimensions external elevation", "expected_ids": ["c1"], "k": 3},
+    {"query": "concrete slab thickness rebar", "expected_ids": ["c2"], "k": 3},
+    {"query": "paint emulsion interior walls", "expected_ids": ["c3"], "k": 3},
+    {"query": "timber hardwood door set", "expected_ids": ["c4"], "k": 3},
+    {"query": "aluminum sliding window glass", "expected_ids": ["c5"], "k": 3},
+    {"query": "ceramic floor tiles living room", "expected_ids": ["c6", "c15"], "k": 3},
+    {"query": "electrical PVC cable lighting", "expected_ids": ["c7"], "k": 3},
+    {"query": "plumbing pipe cold water valves", "expected_ids": ["c8"], "k": 3},
+    {"query": "gypsum false ceiling LED", "expected_ids": ["c9"], "k": 3},
+    {"query": "excavation strip foundation depth", "expected_ids": ["c10"], "k": 3},
+    {"query": "OPC cement bags masonry", "expected_ids": ["c11"], "k": 3},
+    {"query": "structural steel beams mezzanine", "expected_ids": ["c12"], "k": 3},
+    {"query": "waterproofing bathrooms balcony", "expected_ids": ["c13"], "k": 3},
+    {"query": "rebar inspection column photo", "expected_ids": ["c14"], "k": 3},
+    {"query": "bathroom ceramic wall tiles BOQ", "expected_ids": ["c15", "c6"], "k": 3}
+  ]
+}

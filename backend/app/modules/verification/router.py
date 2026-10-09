@@ -11,6 +11,7 @@ from app.models.requirement import ExtractedRequirement
 from app.models.user import User
 from app.models.verification import Approval, UncertaintyFlag
 from app.modules.audit.service import audit_logger
+from app.modules.boq import service as boq_service
 from app.schemas import VerificationAction
 
 router = APIRouter(prefix="/api/verification", tags=["verification"])
@@ -107,7 +108,23 @@ def _resolve(db: Session, flag_id: UUID, user: User, action: str, payload: Verif
         user_id=user.id,
         project_id=project.id,
         before=before,
-        after={"status": flag.status, "action": action},
+        after={"status": flag.status, "action": action, "new_value": payload.new_value if payload else None},
     )
     db.commit()
-    return {"flag_id": flag.id, "status": flag.status, "action": action}
+
+    # Phase 4: keep the estimate in sync after human corrections / approvals on BOQ lines.
+    estimate = None
+    if action in ("correct", "approve") and flag.entity_type == "boq_item":
+        try:
+            estimate = boq_service.calculate_costs_for_boq(db, project.id, user_id=user.id)
+        except ValueError:
+            estimate = None
+
+    result: dict = {"flag_id": flag.id, "status": flag.status, "action": action}
+    if estimate is not None:
+        result["estimate"] = {
+            "id": estimate.id,
+            "total_cost": estimate.total_cost,
+            "currency": estimate.currency,
+        }
+    return result

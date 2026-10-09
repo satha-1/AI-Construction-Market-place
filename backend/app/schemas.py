@@ -142,6 +142,8 @@ class AuditLogOut(BaseModel):
     entity_id: UUID | None
     confidence_score: Decimal | None
     source_reference: str | None
+    before_value: dict | None = None
+    after_value: dict | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

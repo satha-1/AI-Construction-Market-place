@@ -180,6 +180,9 @@ def global_audit_log(
                 "user_email": u.email if u else None,
                 "project_id": a.project_id,
                 "confidence_score": a.confidence_score,
+                "source_reference": a.source_reference,
+                "before_value": a.before_value,
+                "after_value": a.after_value,
                 "created_at": a.created_at,
             }
             for a, u in rows

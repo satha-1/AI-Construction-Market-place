@@ -31,6 +31,12 @@ PATHS = app.openapi()["paths"]
         ("/api/vendors/{vendor_id}/quotations", "get"),
         ("/api/vendors/catalog-items/{item_id}/unpublish", "post"),
         ("/api/vendors/catalog-items/{item_id}", "delete"),
+        ("/api/rfqs/{rfq_id}/comparison", "get"),
+        ("/api/projects/{project_id}/agent/runs", "get"),
+        ("/api/agent/runs/{run_id}/tools", "get"),
+        ("/api/verification/{flag_id}/correct", "post"),
+        ("/api/projects/{project_id}/audit-log", "get"),
+        ("/api/projects/{project_id}/estimate/calculate", "post"),
     ],
 )
 def test_route_is_registered(path: str, method: str):

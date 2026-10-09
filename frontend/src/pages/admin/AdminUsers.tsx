@@ -94,7 +94,7 @@ export default function AdminUsers() {
         </Select>
       </div>
       <ErrorNote error={error} />
-      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(u) => u.id} empty={<EmptyState icon="users" title="No users match the filters" />} />}
+      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(u) => u.id} empty={<EmptyState icon="users" title="No users match the filters" description="Adjust search or role filters to find accounts." />} />}
     </>
   );
 }

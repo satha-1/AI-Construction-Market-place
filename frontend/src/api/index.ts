@@ -6,6 +6,7 @@ import type {
   AdminRate,
   AdminVendor,
   AgentReply,
+  AgentRunSummary,
   AppNotification,
   AuditEntry,
   BoqItem,
@@ -22,6 +23,7 @@ import type {
   Num,
   Project,
   QuotationInput,
+  RfqComparison,
   RfqDetail,
   RfqSummary,
   User,
@@ -94,10 +96,14 @@ export const api = {
   updateBoqItem: (itemId: string, payload: { quantity?: number; item_name?: string; is_verified?: boolean }) =>
     request(`/api/boq-items/${itemId}`, patch(payload)),
   agentTools: (runId: string) =>
-    request<{ tool_name?: string; name?: string; status?: string; input?: unknown; output?: unknown; [k: string]: unknown }[]>(`/api/agent/runs/${runId}/tools`),
+    request<{ tool_name?: string; name?: string; status?: string; input?: unknown; output?: unknown; latency_ms?: number; [k: string]: unknown }[]>(`/api/agent/runs/${runId}/tools`),
+  agentRuns: (projectId: string) => request<AgentRunSummary[]>(`/api/projects/${projectId}/agent/runs`),
   verification: (projectId: string) => request<Flag[]>(`/api/projects/${projectId}/verification-queue`),
   verifyAction: (flagId: string, action: "approve" | "reject" | "correct", body?: { new_value?: Record<string, unknown>; comment?: string }) =>
-    request(`/api/verification/${flagId}/${action}`, post(body ?? {})),
+    request<{ flag_id: string; status: string; action: string; estimate?: { id: string; total_cost: Num; currency: string } }>(
+      `/api/verification/${flagId}/${action}`,
+      post(body ?? {}),
+    ),
   audit: (projectId: string) => request<AuditEntry[]>(`/api/projects/${projectId}/audit-log`),
   agentMessage: (projectId: string, message: string) =>
     request<AgentReply>(`/api/projects/${projectId}/agent/message`, post({ message })),
@@ -132,6 +138,7 @@ export const api = {
   vendorRfqs: (vendorId: string) => request<RfqSummary[]>(`/api/vendors/${vendorId}/rfqs`),
   submitQuotation: (rfqId: string, payload: QuotationInput) => request(`/api/rfqs/${rfqId}/quotations`, post(payload)),
   selectQuotation: (quotationId: string) => request(`/api/quotations/${quotationId}/select`, post()),
+  rfqComparison: (rfqId: string) => request<RfqComparison>(`/api/rfqs/${rfqId}/comparison`),
 
   // public marketplace
   marketLocations: () => request<string[]>("/api/marketplace/locations"),

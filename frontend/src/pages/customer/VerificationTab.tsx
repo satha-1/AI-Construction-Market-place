@@ -16,11 +16,16 @@ export default function VerificationTab() {
   const act = useMutation({
     mutationFn: ({ flag, action, body }: { flag: Flag; action: "approve" | "reject" | "correct"; body?: { new_value?: Record<string, unknown>; comment?: string } }) =>
       api.verifyAction(flag.id, action, body),
-    onSuccess: (_d, v) => {
-      toast.success(`Flag ${v.action === "correct" ? "corrected" : v.action + "d"}`);
+    onSuccess: (data, v) => {
+      const recalc = data.estimate ? ` · estimate now ${data.estimate.total_cost} ${data.estimate.currency}` : "";
+      toast.success(`Flag ${v.action === "correct" ? "corrected" : v.action + "d"}${recalc}`);
       setCorrecting(null);
       qc.invalidateQueries({ queryKey: ["flags", projectId] });
       qc.invalidateQueries({ queryKey: ["boq", projectId] });
+      qc.invalidateQueries({ queryKey: ["estimate", projectId] });
+      qc.invalidateQueries({ queryKey: ["project", projectId] });
+      qc.invalidateQueries({ queryKey: ["audit", projectId] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (e) => toast.error(errorMessage(e)),
   });
@@ -76,6 +81,9 @@ export default function VerificationTab() {
         open={!!correcting}
         onClose={() => setCorrecting(null)}
         title="Correct value"
+        description="Saving updates the BOQ and recalculates the project estimate."
+        icon="edit"
+        tone="amber"
         footer={
           <>
             <Button variant="secondary" onClick={() => setCorrecting(null)}>

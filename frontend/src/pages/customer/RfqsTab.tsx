@@ -98,6 +98,9 @@ export default function RfqsTab() {
         open={open}
         onClose={() => setOpen(false)}
         title="New request for quotation"
+        description="Select vendors ranked by how well their catalog matches your BOQ."
+        icon="inbox"
+        tone="blue"
         wide
         footer={
           <>

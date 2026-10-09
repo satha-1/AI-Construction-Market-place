@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.models.document import ProjectDocument
 from app.models.requirement import ExtractedRequirement
 from app.models.rfq import Quotation, QuotationLineItem, Rfq
+from app.models.vendor import Vendor
 from app.models.verification import UncertaintyFlag
 from app.modules.boq import service as boq_service
 from app.modules.matching.engine import match_vendors_for_project
@@ -155,7 +156,12 @@ class CalculateQuantitiesTool(Tool):
         if boq is None:
             return ToolResult(success=False, error="No BOQ")
         updated = 0
+        skipped_verified = 0
         for item in boq.items:
+            # Phase 4: never overwrite quantities a human has already verified.
+            if item.is_verified:
+                skipped_verified += 1
+                continue
             formula = (item.calculation_trace or {}).get("formula", "count")
             attrs = {}
             if item.source_requirement_id:
@@ -177,7 +183,7 @@ class CalculateQuantitiesTool(Tool):
                 )
             updated += 1
         db.commit()
-        return ToolResult(success=True, data={"updated": updated})
+        return ToolResult(success=True, data={"updated": updated, "skipped_verified": skipped_verified})
 
 
 class CalculateCostsTool(Tool):
@@ -232,24 +238,49 @@ class CompareQuotationsTool(Tool):
         rows = []
         for q in quotes:
             lines = db.scalars(select(QuotationLineItem).where(QuotationLineItem.quotation_id == q.id)).all()
+            vendor = db.get(Vendor, q.vendor_id)
+            lead_times = [l.lead_time for l in lines if l.lead_time]
             rows.append(
                 {
                     "quotation_id": str(q.id),
                     "vendor_id": str(q.vendor_id),
+                    "company_name": vendor.company_name if vendor else "Vendor",
                     "total_price": str(q.total_price),
                     "currency": q.currency,
                     "line_count": len(lines),
                     "status": q.status,
+                    "avg_lead_time": lead_times[0] if lead_times else None,
                 }
             )
         rows.sort(key=lambda r: Decimal(r["total_price"]))
-        summary = (
-            f"Compared {len(rows)} quotations. Lowest total: "
-            f"{rows[0]['total_price']} {rows[0]['currency']}."
-            if rows
-            else "No quotations submitted yet."
+        if not rows:
+            summary = "No quotations submitted yet. Invite vendors or wait for responses before comparing."
+        elif len(rows) == 1:
+            summary = (
+                f"Only one quotation so far from {rows[0]['company_name']} "
+                f"at {rows[0]['total_price']} {rows[0]['currency']}. "
+                "Wait for more responses for a meaningful comparison."
+            )
+        else:
+            lowest, second = rows[0], rows[1]
+            spread = Decimal(second["total_price"]) - Decimal(lowest["total_price"])
+            pct = (spread / Decimal(second["total_price"]) * 100) if Decimal(second["total_price"]) else Decimal("0")
+            summary = (
+                f"Compared {len(rows)} quotations. "
+                f"{lowest['company_name']} is lowest at {lowest['total_price']} {lowest['currency']}, "
+                f"{pct:.1f}% below {second['company_name']}. "
+                f"Selection remains a human decision — review lead times and coverage before picking a winner."
+            )
+        return ToolResult(
+            success=True,
+            data={
+                "rfq_id": str(rfq.id),
+                "quotations": rows,
+                "summary": summary,
+                "lowest_quotation_id": rows[0]["quotation_id"] if rows else None,
+            },
+            confidence_score=0.85 if len(rows) > 1 else 0.5,
         )
-        return ToolResult(success=True, data={"rfq_id": str(rfq.id), "quotations": rows, "summary": summary})
 
 
 class RequestHumanVerificationTool(Tool):

@@ -28,8 +28,35 @@ def test_quantity_volume_and_count():
     assert qty2 == Decimal("4")
 
 
+def test_quantity_volume_area_thickness():
+    qty, trace, missing = quantity_calculator.calculate("volume", {"area": 12, "thickness": 0.15})
+    assert missing == []
+    assert qty == Decimal("1.80")
+    assert trace["formula"] == "volume"
+
+
+def test_quantity_length_variants():
+    qty, _, missing = quantity_calculator.calculate("length", {"perimeter": 24})
+    assert missing == []
+    assert qty == Decimal("24")
+    qty2, _, missing2 = quantity_calculator.calculate("length", {"route_length": 40})
+    assert missing2 == []
+    assert qty2 == Decimal("40")
+    none_qty, _, miss = quantity_calculator.calculate("length", {})
+    assert none_qty is None
+    assert miss
+
+
+def test_quantity_unknown_formula():
+    qty, trace, missing = quantity_calculator.calculate("magic", {"count": 1})
+    assert qty is None
+    assert any("unknown_formula" in m for m in missing)
+    assert trace["formula"] == "magic"
+
+
 def test_cost_line():
     assert cost_calculator.line_total(Decimal("10"), Decimal("4.5")) == Decimal("45.00")
+    assert cost_calculator.line_total(Decimal("3.333"), Decimal("1.5")) == Decimal("5.00")
 
 
 def test_chunker_splits():

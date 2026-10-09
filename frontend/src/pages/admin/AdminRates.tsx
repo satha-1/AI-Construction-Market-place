@@ -70,11 +70,14 @@ export default function AdminRates() {
         actions={<SearchInput className="w-full sm:w-80" value={search} onChange={setSearch} placeholder="Search item or category" />}
       />
       <ErrorNote error={error} />
-      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} empty={<EmptyState icon="calculator" tone="violet" title="No reference rates" />} />}
+      {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={rows} rowKey={(r) => r.id} empty={<EmptyState icon="calculator" tone="violet" title="No reference rates" description="Seed reference data via Alembic migration 0003, or add rates manually." />} />}
       <Modal
         open={!!editing}
         onClose={() => setEditing(null)}
         title={editing ? `Edit rate · ${editing.item_name}` : "Edit rate"}
+        description="Changes are written to the audit log and used by the cost calculator."
+        icon="calculator"
+        tone="violet"
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditing(null)}>

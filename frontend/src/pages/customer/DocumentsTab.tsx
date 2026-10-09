@@ -95,7 +95,7 @@ export default function DocumentsTab() {
       <ErrorNote error={error} />
       {isLoading ? <LoadingBlock /> : <DataTable columns={columns} rows={data} rowKey={(d) => d.id} empty={<EmptyState icon="file" tone="blue" title="No documents yet" description="Upload drawings or an existing BOQ to let the assistant extract requirements." />} />}
 
-      <Modal open={!!chunksFor} onClose={() => setChunksFor(null)} title={chunksFor ? `Chunks · ${chunksFor.file_name}` : "Chunks"} wide>
+      <Modal open={!!chunksFor} onClose={() => setChunksFor(null)} title={chunksFor ? `Chunks · ${chunksFor.file_name}` : "Chunks"} description="Indexed text used by the assistant for retrieval." icon="layers" tone="blue" wide>
         {chunks.isLoading ? (
           <LoadingBlock />
         ) : (

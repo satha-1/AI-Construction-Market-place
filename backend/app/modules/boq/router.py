@@ -90,11 +90,14 @@ def patch_boq_item(
     before = {"quantity": str(item.quantity), "item_name": item.item_name}
     if payload.quantity is not None:
         item.quantity = payload.quantity
+        if payload.is_verified is None:
+            item.is_verified = True
     if payload.item_name is not None:
         item.item_name = payload.item_name
     if payload.is_verified is not None:
         item.is_verified = payload.is_verified
-    item.confidence_score = payload.confidence_score if payload.confidence_score is not None else item.confidence_score
+    if payload.confidence_score is not None:
+        item.confidence_score = payload.confidence_score
     audit_logger.log_event(
         db,
         actor_type="human",
@@ -104,10 +107,21 @@ def patch_boq_item(
         user_id=user.id,
         project_id=boq.project_id,
         before=before,
-        after={"quantity": str(item.quantity), "item_name": item.item_name},
+        after={"quantity": str(item.quantity), "item_name": item.item_name, "is_verified": item.is_verified},
     )
     db.commit()
-    return {"id": item.id, "quantity": item.quantity, "item_name": item.item_name, "is_verified": item.is_verified}
+
+    estimate = None
+    if payload.quantity is not None:
+        try:
+            estimate = boq_service.calculate_costs_for_boq(db, boq.project_id, user_id=user.id)
+        except ValueError:
+            estimate = None
+
+    result = {"id": item.id, "quantity": item.quantity, "item_name": item.item_name, "is_verified": item.is_verified}
+    if estimate is not None:
+        result["estimate"] = {"id": estimate.id, "total_cost": estimate.total_cost, "currency": estimate.currency}
+    return result
 
 
 @router.post("/api/projects/{project_id}/estimate/calculate")
@@ -121,7 +135,7 @@ def calculate_estimate(
         estimate = boq_service.calculate_costs_for_boq(db, project_id, user_id=user.id)
         return {"estimate_id": estimate.id, "total_cost": estimate.total_cost, "currency": estimate.currency}
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail="Cannot calculate estimate — generate a BOQ with quantities first") from exc
 
 
 @router.get("/api/projects/{project_id}/estimate")

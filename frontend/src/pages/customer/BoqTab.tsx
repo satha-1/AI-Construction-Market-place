@@ -43,7 +43,7 @@ export default function BoqTab() {
   const save = useMutation({
     mutationFn: () => api.updateBoqItem(editing!.id, { quantity: Number(value), is_verified: true }),
     onSuccess: () => {
-      toast.success("Quantity corrected — recalculate the estimate to refresh costs");
+      toast.success("Quantity corrected — estimate recalculated");
       setEditing(null);
       refreshAll();
     },
@@ -66,6 +66,20 @@ export default function BoqTab() {
     { key: "qty", header: "Qty", align: "right", render: (i) => `${qty(i.quantity)} ${i.unit ?? ""}` },
     { key: "rate", header: "Unit rate", align: "right", render: (i) => (lineByItem.get(i.id) ? money(lineByItem.get(i.id)!.unit_rate) : "—") },
     { key: "total", header: "Line total", align: "right", render: (i) => <span className="font-semibold">{lineByItem.get(i.id) ? money(lineByItem.get(i.id)!.line_total) : "—"}</span> },
+    {
+      key: "trace",
+      header: "Calc",
+      render: (i) => {
+        const formula = typeof i.calculation_trace?.formula === "string" ? i.calculation_trace.formula : null;
+        return formula ? (
+          <Badge tone="neutral" icon="calculator">
+            {formula}
+          </Badge>
+        ) : (
+          <span className="text-subtle">—</span>
+        );
+      },
+    },
     {
       key: "conf",
       header: "Confidence",
@@ -140,6 +154,9 @@ export default function BoqTab() {
         open={!!editing}
         onClose={() => setEditing(null)}
         title="Correct quantity"
+        description="The estimate recalculates automatically after you save."
+        icon="edit"
+        tone="violet"
         footer={
           <>
             <Button variant="secondary" onClick={() => setEditing(null)}>
@@ -151,7 +168,13 @@ export default function BoqTab() {
           </>
         }
       >
-        <p className="mb-4 text-sm text-muted">{editing?.item_name}</p>
+        <p className="mb-2 text-sm font-medium text-ink">{editing?.item_name}</p>
+        {editing?.calculation_trace ? (
+          <p className="mb-4 rounded-ui bg-soft px-3 py-2 text-xs text-muted">
+            Formula <span className="font-semibold text-ink">{String(editing.calculation_trace.formula ?? "—")}</span>
+            {editing.calculation_trace.inputs ? ` · inputs ${JSON.stringify(editing.calculation_trace.inputs)}` : null}
+          </p>
+        ) : null}
         <Input label={`Quantity (${editing?.unit ?? "unit"})`} type="number" min="0" step="any" value={value} onChange={(e) => setValue(e.target.value)} />
       </Modal>
     </>

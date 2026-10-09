@@ -100,8 +100,8 @@ function NotificationBell() {
         {unread > 0 ? <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ring-2 ring-surface">{unread > 9 ? "9+" : unread}</span> : null}
       </button>
       {open ? (
-        <div className="absolute right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-line bg-surface shadow-lift">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+        <div className="absolute right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-line bg-white shadow-lift">
+          <div className="flex items-center justify-between border-b border-line bg-white px-4 py-3">
             <span className="text-sm font-bold text-ink">Notifications</span>
             <Link to="/notifications" onClick={() => setOpen(false)} className="text-xs font-semibold text-accent hover:underline">
               View all
@@ -116,7 +116,7 @@ function NotificationBell() {
             <ul>
               {items.map((n) => (
                 <li key={n.id}>
-                  <button type="button" onClick={() => openItem(n.id, n.link)} className={cx("flex w-full gap-3 border-b border-line px-4 py-3 text-left transition-colors last:border-0 hover:bg-soft", !n.is_read && "bg-accent-soft/40")}>
+                  <button type="button" onClick={() => openItem(n.id, n.link)} className={cx("flex w-full gap-3 border-b border-line bg-white px-4 py-3 text-left transition-colors last:border-0 hover:bg-soft", !n.is_read && "bg-accent-soft")}>
                     <IconTile {...notificationVisual(n.kind)} size="sm" round />
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-ink">{n.title}</span>
@@ -150,8 +150,8 @@ function UserMenu() {
         <Icon name="chevronDown" className="hidden h-4 w-4 text-subtle lg:block" />
       </button>
       {open ? (
-        <div className="absolute right-0 z-40 mt-2 w-64 overflow-hidden rounded-card border border-line bg-surface shadow-lift">
-          <div className="border-b border-line px-4 py-3">
+        <div className="absolute right-0 z-40 mt-2 w-64 overflow-hidden rounded-card border border-line bg-white shadow-lift">
+          <div className="border-b border-line bg-white px-4 py-3">
             <p className="truncate text-sm font-semibold text-ink">{user.full_name}</p>
             <p className="truncate text-xs text-muted">{user.email}</p>
           </div>
@@ -247,14 +247,14 @@ export default function ConsoleLayout() {
       {mobileNav ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button type="button" aria-label="Close menu" className="absolute inset-0 bg-slate-900/40" onClick={() => setMobileNav(false)} />
-          <div className="relative h-full w-72 max-w-[85vw] border-r border-line shadow-lift">
+          <div className="relative h-full w-72 max-w-[85vw] border-r border-line bg-white shadow-lift">
             <Sidebar onNavigate={() => setMobileNav(false)} />
           </div>
         </div>
       ) : null}
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface/90 px-4 backdrop-blur sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-white px-4 sm:px-6 lg:px-8">
           <button type="button" className="focus-ring flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-soft lg:hidden" onClick={() => setMobileNav(true)} aria-label="Open menu">
             <Icon name="menu" className="h-5 w-5" />
           </button>

@@ -25,6 +25,11 @@ export default function AdminAudit() {
     { key: "actor", header: "Actor", render: (a) => <ActorBadge actor={a.actor_type} /> },
     { key: "user", header: "User", render: (a) => <span className="text-muted">{a.user_email ?? "system"}</span> },
     { key: "entity", header: "Entity", render: (a) => <Badge>{titleCase(a.entity_type)}</Badge> },
+    {
+      key: "source",
+      header: "Source",
+      render: (a) => (a.source_reference ? <Badge tone="info" icon="file">{a.source_reference}</Badge> : <span className="text-subtle">—</span>),
+    },
     { key: "conf", header: "Confidence", align: "right", render: (a) => percent(a.confidence_score) },
   ];
 
@@ -51,7 +56,7 @@ export default function AdminAudit() {
         <LoadingBlock />
       ) : (
         <>
-          <DataTable columns={columns} rows={data.items} rowKey={(a) => a.id} empty={<EmptyState icon="shieldCheck" tone="emerald" title="No audit entries match" />} />
+          <DataTable columns={columns} rows={data.items} rowKey={(a) => a.id} empty={<EmptyState icon="shieldCheck" tone="emerald" title="No audit entries match" description="Try clearing filters or wait for platform activity." />} />
           <div className="mt-4 flex items-center justify-between text-sm text-muted">
             <span>
               {total} entries · page {page + 1} of {pages} {isFetching ? "· updating…" : ""}

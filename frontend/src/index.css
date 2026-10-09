@@ -67,6 +67,10 @@ body {
   .card-hover:hover {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
   }
+  /* Opaque panel for menus/dialogs — never rely on translucent surface tokens. */
+  .panel-solid {
+    @apply border border-line bg-white shadow-lift;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

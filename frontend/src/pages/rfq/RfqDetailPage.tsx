@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { api, type Quotation, type RfqDetail } from "../../api";
 import { useAuth } from "../../auth";
 import { Icon } from "../../components/Icon";
-import { Badge, Button, Card, CardHeader, EmptyState, EntityCell, ErrorNote, IconTile, Input, LoadingBlock, PageHeader, StatusBadge, useToast } from "../../components/ui";
+import { Badge, Button, Card, CardHeader, EmptyState, EntityCell, ErrorNote, IconTile, Input, LoadingBlock, PageHeader, Select, StatusBadge, Textarea, useToast } from "../../components/ui";
 import { cx, dateShort, errorMessage, money, qty } from "../../lib/format";
 import { categoryVisual } from "../../lib/visuals";
 
@@ -40,6 +40,11 @@ function CustomerView({ rfq }: { rfq: RfqDetail }) {
   const qc = useQueryClient();
   const toast = useToast();
   const [confirm, setConfirm] = useState<string | null>(null);
+  const comparison = useQuery({
+    queryKey: ["rfq", rfq.id, "comparison"],
+    queryFn: () => api.rfqComparison(rfq.id),
+    enabled: rfq.quotations.length > 0,
+  });
   const select = useMutation({
     mutationFn: (id: string) => api.selectQuotation(id),
     onSuccess: () => {
@@ -60,9 +65,19 @@ function CustomerView({ rfq }: { rfq: RfqDetail }) {
       <Header rfq={rfq} back={{ to: `/projects/${rfq.project.id}/rfqs`, label: "All RFQs" }} />
       <ErrorNote error={select.error} />
 
+      {rfq.quotations.length > 0 ? (
+        <Card className="mb-6 border-accent/20 bg-gradient-to-br from-accent-soft via-white to-sky-50">
+          <CardHeader icon="sparkles" tone="violet" title="AI comparison summary" description="Deterministic ranking with a narrative for the customer" />
+          {comparison.isLoading ? (
+            <p className="text-sm text-muted">Generating summary…</p>
+          ) : (
+            <p className="text-sm leading-relaxed text-ink">{comparison.data?.summary ?? "Comparison unavailable."}</p>
+          )}
+        </Card>
+      ) : null}
+
       <Card className="mb-6">
-        <CardHeader icon="store" tone="blue" title="Invited vendors" description={`${rfq.vendors.length} invited · ${rfq.quotations.length} responded`} />
-        <div className="flex flex-wrap gap-2">
+        <CardHeader icon="store" tone="blue" title="Invited vendors" description={`${rfq.vendors.length} invited · ${rfq.quotations.length} responded`} />        <div className="flex flex-wrap gap-2">
           {rfq.vendors.map((v) => {
             const responded = rfq.quotations.some((q) => q.vendor_id === v.id);
             return (
@@ -171,6 +186,8 @@ function VendorView({ rfq }: { rfq: RfqDetail }) {
   const toast = useToast();
   const mine = rfq.quotations[0];
   const closed = rfq.status === "closed";
+  const [currency, setCurrency] = useState(mine?.currency ?? "USD");
+  const [notes, setNotes] = useState("");
   const [rows, setRows] = useState<Record<string, { unit_price: string; quantity: string; lead_time: string }>>({});
 
   useEffect(() => {
@@ -184,6 +201,7 @@ function VendorView({ rfq }: { rfq: RfqDetail }) {
       };
     }
     setRows(init);
+    setCurrency(mine?.currency ?? "USD");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rfq.id, mine?.id]);
 
@@ -193,12 +211,13 @@ function VendorView({ rfq }: { rfq: RfqDetail }) {
   const submit = useMutation({
     mutationFn: () =>
       api.submitQuotation(rfq.id, {
-        currency: "USD",
+        currency,
         lines: rfq.lines.map((l) => ({
           rfq_line_item_id: l.id,
           unit_price: Number(rows[l.id].unit_price),
           quantity: Number(rows[l.id].quantity),
           lead_time: rows[l.id].lead_time || undefined,
+          notes: notes.trim() || undefined,
         })),
       }),
     onSuccess: () => {
@@ -234,15 +253,28 @@ function VendorView({ rfq }: { rfq: RfqDetail }) {
         </p>
       ) : null}
 
+      <Card className="mb-4">
+        <CardHeader icon="sliders" tone="slate" title="Quote settings" description="Currency and commercial notes applied to this submission" />
+        <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+          <Select label="Currency" disabled={closed} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="LKR">LKR</option>
+          </Select>
+          <Textarea label="Commercial notes (optional)" disabled={closed} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Payment terms, delivery window, exclusions…" />
+        </div>
+      </Card>
+
       <Card padded={false} className="overflow-hidden">
-        <div className="hidden grid-cols-[1.6fr_0.8fr_1fr_1fr_1fr] gap-3 border-b border-line bg-soft/70 px-5 py-3.5 md:grid">
-          {["Item", "Requested", "Unit price (USD)", "Quantity", "Lead time"].map((h) => (
+        <div className="hidden grid-cols-[1.6fr_0.8fr_1fr_1fr_1fr] gap-3 border-b border-line bg-soft px-5 py-3.5 md:grid">
+          {["Item", "Requested", `Unit price (${currency})`, "Quantity", "Lead time"].map((h) => (
             <span key={h} className="text-xs font-semibold text-muted">
               {h}
             </span>
           ))}
         </div>
-        <ul className="divide-y divide-line">
+        <ul className="divide-y divide-line bg-white">
           {rfq.lines.map((line) => {
             const v = categoryVisual(line.category || line.item_name);
             return (
@@ -258,17 +290,16 @@ function VendorView({ rfq }: { rfq: RfqDetail }) {
             );
           })}
         </ul>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-soft/70 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-soft px-5 py-4">
           <div>
             <p className="text-sm font-medium text-muted">Quotation total</p>
-            <p className="text-xl font-bold text-ink">{money(total)}</p>
+            <p className="text-xl font-bold text-ink">{money(total, currency)}</p>
           </div>
           <Button size="lg" icon="arrowRight" disabled={closed || !ready} loading={submit.isPending} onClick={() => submit.mutate()}>
             {mine ? "Update quotation" : "Submit quotation"}
           </Button>
         </div>
-      </Card>
-      <div className="mt-4">
+      </Card>      <div className="mt-4">
         <ErrorNote error={submit.error} />
       </div>
     </>

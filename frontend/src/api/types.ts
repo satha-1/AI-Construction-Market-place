@@ -71,9 +71,37 @@ export type AuditEntry = {
   entity_type: string;
   entity_id: string | null;
   confidence_score: Num | null;
+  source_reference?: string | null;
+  before_value?: Record<string, unknown> | null;
+  after_value?: Record<string, unknown> | null;
   created_at: string;
   user_email?: string | null;
   project_id?: string | null;
+};
+
+export type RfqComparison = {
+  rfq_id: string;
+  quotations: {
+    quotation_id: string;
+    vendor_id: string;
+    company_name: string;
+    total_price: Num;
+    currency: string;
+    line_count: number;
+    status: string;
+    avg_lead_time?: string | null;
+  }[];
+  summary: string;
+  lowest_quotation_id?: string | null;
+};
+
+export type AgentRunSummary = {
+  id: string;
+  user_message: string;
+  final_response: string | null;
+  status: string;
+  started_at: string;
+  completed_at: string | null;
 };
 
 export type Document = {
@@ -92,6 +120,7 @@ export type BoqItem = {
   quantity: Num | null;
   confidence_score: Num | null;
   is_verified: boolean;
+  calculation_trace?: Record<string, unknown> | null;
 };
 
 export type EstimateLine = {

@@ -157,6 +157,9 @@ export default function VendorCatalog() {
         open={!!draft}
         onClose={() => setDraft(null)}
         title={draft?.id ? "Edit item" : "Add catalog item"}
+        description="Published items appear in the marketplace and matching."
+        icon="box"
+        tone="teal"
         footer={
           <>
             <Button variant="secondary" onClick={() => setDraft(null)}>

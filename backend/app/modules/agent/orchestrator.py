@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.agent import AgentRun, AgentToolCall
-from app.models.boq import Boq
+from app.models.boq import Boq, BoqItem, Estimate
 from app.models.project import Project
 from app.models.requirement import ExtractedRequirement
 from app.models.verification import UncertaintyFlag
@@ -139,12 +139,33 @@ class AgentOrchestrator:
         project = db.get(Project, project_id)
         req_count = len(db.scalars(select(ExtractedRequirement).where(ExtractedRequirement.project_id == project_id)).all())
         boq = db.scalar(select(Boq).where(Boq.project_id == project_id).order_by(Boq.version.desc()))
+        open_flags = len(
+            db.scalars(
+                select(UncertaintyFlag).where(
+                    UncertaintyFlag.project_id == project_id,
+                    UncertaintyFlag.status == "open",
+                )
+            ).all()
+        )
+        verified = 0
+        item_count = 0
+        estimate_total = None
+        if boq:
+            items = db.scalars(select(BoqItem).where(BoqItem.boq_id == boq.id)).all()
+            item_count = len(items)
+            verified = sum(1 for i in items if i.is_verified)
+            estimate = db.scalar(select(Estimate).where(Estimate.boq_id == boq.id).order_by(Estimate.version.desc()))
+            if estimate:
+                estimate_total = f"{estimate.total_cost} {estimate.currency}"
         hits = hybrid_retriever.search(db, project_id=project_id, query=message, k=4)
         chunk_preview = " | ".join(h.content[:120].replace("\n", " ") for h in hits)
         return (
             f"Project={project.name if project else project_id} status={project.status if project else '?'} "
             f"requirements={req_count} boq_version={boq.version if boq else 'none'} "
-            f"chunks={chunk_preview}"
+            f"boq_items={item_count} verified_items={verified} open_flags={open_flags} "
+            f"estimate={estimate_total or 'none'} "
+            f"chunks={chunk_preview}. "
+            "Do not overwrite verified BOQ quantities; prefer calculate_costs after corrections."
         )
 
     def _default_summary(self, db: Session, project_id: UUID, history: list[dict], flags) -> str:

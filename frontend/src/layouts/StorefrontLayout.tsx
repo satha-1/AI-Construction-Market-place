@@ -82,7 +82,7 @@ export default function StorefrontLayout() {
   const { user } = useAuth();
   return (
     <div className="theme-root flex flex-col">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-line bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 md:h-16 lg:h-[72px] lg:gap-8 lg:px-8">
           <Brand />
           <div className="hidden max-w-2xl flex-1 md:block">

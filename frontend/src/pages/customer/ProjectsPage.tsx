@@ -112,6 +112,9 @@ export default function ProjectsPage() {
         open={open}
         onClose={() => setOpen(false)}
         title="New project"
+        description="Each project holds documents, BOQ, RFQs and a full audit trail."
+        icon="folder"
+        tone="teal"
         footer={
           <>
             <Button variant="secondary" onClick={() => setOpen(false)}>

@@ -80,19 +80,29 @@ Run `alembic upgrade head` to apply migration `0004` before using the new screen
 
 ## Demo path
 
-1. Register **customer** → create project → upload PDF/CSV with walls/doors/dimensions.  
-2. Open **Agent** → “analyze documents and generate BOQ with costs”.  
-3. Review **BOQ**, resolve **Verification** flags.  
-4. Register **vendor** → upload catalog CSV → publish items.  
-5. Customer **Match vendors** / create **RFQ** → vendor sees inbox → submit quotation → compare.
+Full Phase 7 walkthrough (seeded accounts, talking points, smoke checklist): [`docs/11-demo-script.md`](docs/11-demo-script.md).
+
+Short path:
+
+1. Seed demo data → log in as `demo.customer@conapp.local` / `Demo123!`.  
+2. Open **Riverside** project → **BOQ** / **Verification** → correct a flag (estimate auto-recalcs).  
+3. Create **RFQ** → as vendor submit quotation → compare & select.  
 
 Set `OPENAI_API_KEY` in `.env` for real LLM planning and image vision; without it the heuristic agent and local embeddings still work.
 
-## Next (Phase 4 polish)
+## Demo seed (Phase 5)
 
-- Richer quotation submission UI  
-- Recalculate estimate after every verification correction  
-- Retrieval quality test set / demo seed data  
-- UI polish for audit timeline and confidence badges  
+From `backend/` with the venv active and DB migrated:
 
-See `docs/07-development-plan.md`.
+```bash
+python -m app.scripts.seed_demo
+```
+
+Creates sample customers, projects, and 4 approved vendors with published catalogs. Password for all demo accounts: `Demo123!`  
+Examples: `demo.customer@conapp.local`, `cement.co@conapp.local`.
+
+## Phases 4–7 status
+
+Delivered through Phase 7: RFQ comparison + auto-recalc, agent run history, audit timeline, solid modals, enriched demo seed + demo script, calculator/matching/tool/orchestrator/retrieval tests, calculation_trace + citations in UI.
+
+See `docs/07-development-plan.md` and `docs/11-demo-script.md`.
