@@ -93,7 +93,15 @@ export default function MarketplaceHome() {
               <h1 className="mt-5 text-4xl font-black leading-[1.08] tracking-tight text-ink sm:text-5xl">
                 Building materials from <span className="text-accent">verified suppliers</span>
               </h1>
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">Browse published catalogs, then turn your BOQ into RFQs and compare quotations side by side.</p>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">Browse published catalogs freely. Sign in when you are ready to request a quotation or sell materials.</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <ButtonLink to="/register?role=customer&from=/projects" icon="briefcase">
+                  Register to order
+                </ButtonLink>
+                <ButtonLink to="/login" variant="secondary" icon="user">
+                  Sign in
+                </ButtonLink>
+              </div>
               <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
                 {trust.map((t) => (
                   <li key={t.label} className="flex items-center gap-2 text-sm font-medium text-ink">
@@ -221,7 +229,7 @@ export default function MarketplaceHome() {
                     Clear filters
                   </Button>
                 ) : (
-                  <ButtonLink to="/register" icon="store">
+                  <ButtonLink to="/register?role=vendor&from=/vendor" icon="store">
                     Become a vendor
                   </ButtonLink>
                 )
@@ -257,8 +265,8 @@ export default function MarketplaceHome() {
                   <p className="mt-1 max-w-lg text-sm text-white/85">Publish your catalog, get matched to real BOQs and receive RFQs from customers.</p>
                 </div>
               </div>
-              <Link to="/register" className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-ui bg-white px-6 text-sm font-semibold text-teal-700 transition hover:bg-white/90">
-                Become a vendor <Icon name="arrowRight" className="h-4 w-4" />
+              <Link to="/register?role=vendor&from=/vendor" className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-ui bg-white px-6 text-sm font-semibold text-teal-700 transition hover:bg-white/90">
+                Sign up to sell <Icon name="arrowRight" className="h-4 w-4" />
               </Link>
             </div>
           </section>

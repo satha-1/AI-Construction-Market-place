@@ -4,6 +4,7 @@ import type { MarketCategory, MarketItem, MarketVendor } from "../../api";
 import { useAuth } from "../../auth";
 import { Icon } from "../../components/Icon";
 import { buttonClass } from "../../components/ui";
+import { quoteAuthPath } from "../../lib/authPaths";
 import { cx, money, qty } from "../../lib/format";
 import { categoryVisual, toneClasses, toneFor } from "../../lib/visuals";
 
@@ -26,7 +27,8 @@ export function Media({ category, seed, children }: { category: string | null; s
 
 export function ItemCard({ item }: { item: MarketItem }) {
   const { user } = useAuth();
-  const quoteLink = user?.role === "customer" || user?.role === "admin" ? "/projects" : "/register";
+  // Guests must register/sign in before ordering; customers jump to projects.
+  const quoteLink = user?.role === "customer" || user?.role === "admin" ? "/projects" : user?.role === "vendor" ? "/vendor" : quoteAuthPath;
   return (
     <article className="group card-hover flex flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
       <Media category={item.category} seed={item.item_name}>
@@ -55,7 +57,7 @@ export function ItemCard({ item }: { item: MarketItem }) {
             </p>
           </div>
           <Link to={quoteLink} className={buttonClass("soft", "sm")}>
-            Get quote
+            {user?.role === "customer" || user?.role === "admin" ? "Get quote" : user ? "Open workspace" : "Sign in to quote"}
           </Link>
         </div>
       </div>

@@ -70,11 +70,14 @@ One shared component library (`src/components/ui`) and two CSS-variable themes (
 
 | Routes | Role |
 |---|---|
-| `/marketplace`, `/marketplace/vendors[/:id]` | public |
+| `/` (landing), `/marketplace`, `/marketplace/vendors[/:id]` | public |
+| `/login`, `/register` | public (auth) |
 | `/admin`, `/admin/{users,vendors,projects,rates,audit}` | admin |
 | `/dashboard`, `/projects`, `/projects/:id/{boq,verification,rfqs,agent,audit}`, `/projects/:id/rfqs/:rfqId` | customer |
 | `/vendor`, `/vendor/{catalog,rfqs,rfqs/:id,quotations,profile}` | vendor |
 | `/notifications` | all signed-in |
+
+Guests can browse the marketplace. **Get quote** / ordering and **Sell on Conapp** send users to register or sign in first.
 
 Run `alembic upgrade head` to apply migration `0004` before using the new screens.
 

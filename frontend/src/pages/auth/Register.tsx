@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, setToken } from "../../api";
 import { useAuth } from "../../auth";
 import AuthShell from "../../components/AuthShell";
 import PasswordField from "../../components/PasswordField";
 import { Button, ErrorNote, IconTile, Input } from "../../components/ui";
+import { authPath } from "../../lib/authPaths";
 import { cx } from "../../lib/format";
 import { passwordsMatch, validatePassword } from "../../password";
 import { homeFor } from "../../roles";
@@ -16,12 +17,16 @@ const roles = [
 
 export default function Register() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { setUser } = useAuth();
+  const initialRole = params.get("role") === "vendor" ? "vendor" : "customer";
+  const from = params.get("from") || undefined;
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("customer");
+  const [role, setRole] = useState(initialRole);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
 
@@ -40,7 +45,12 @@ export default function Register() {
       setToken(token.access_token);
       const me = await api.me();
       setUser(me);
-      navigate(homeFor(me.role), { replace: true });
+      // Prefer an explicit return URL when it matches the account type.
+      const dest =
+        from && ((role === "vendor" && from.startsWith("/vendor")) || (role === "customer" && (from.startsWith("/projects") || from.startsWith("/dashboard"))))
+          ? from
+          : homeFor(me.role);
+      navigate(dest, { replace: true });
     } catch (err) {
       setError(err);
     } finally {
@@ -51,12 +61,16 @@ export default function Register() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Join as a customer or a vendor. Admin access is issued separately."
+      subtitle="Join as a customer to order, or as a vendor to sell. You can browse the marketplace without an account."
       footer={
         <>
           Already registered?{" "}
-          <Link className="font-bold text-accent hover:underline" to="/login">
+          <Link className="font-semibold text-accent hover:underline" to={authPath({ mode: "login", role: role === "vendor" ? "vendor" : "customer", from })}>
             Sign in
+          </Link>
+          {" · "}
+          <Link className="font-semibold text-accent hover:underline" to="/">
+            Back to marketplace
           </Link>
         </>
       }
@@ -64,8 +78,26 @@ export default function Register() {
       <form className="space-y-4" onSubmit={onSubmit}>
         <Input label="Full name" required placeholder="Alex Rivera" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         <Input label="Email" type="email" autoComplete="email" required placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <PasswordField label="Password" value={password} onChange={(v) => { setPassword(v); setError(null); }} autoComplete="new-password" placeholder="Enter password" />
-        <PasswordField label="Confirm password" value={confirmPassword} onChange={(v) => { setConfirmPassword(v); setError(null); }} autoComplete="new-password" placeholder="Enter password" />
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={(v) => {
+            setPassword(v);
+            setError(null);
+          }}
+          autoComplete="new-password"
+          placeholder="Enter password"
+        />
+        <PasswordField
+          label="Confirm password"
+          value={confirmPassword}
+          onChange={(v) => {
+            setConfirmPassword(v);
+            setError(null);
+          }}
+          autoComplete="new-password"
+          placeholder="Enter password"
+        />
         <fieldset>
           <legend className="mb-1.5 text-sm font-medium text-ink">I am a</legend>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -78,8 +110,8 @@ export default function Register() {
                   aria-pressed={selected}
                   onClick={() => setRole(option.value)}
                   className={cx(
-                    "focus-ring flex min-h-[44px] items-start gap-3 rounded-card border px-4 py-3 text-left transition-all duration-ui ease-ui",
-                    selected ? "border-accent bg-accent-soft ring-4 ring-accent/10" : "border-line bg-surface hover:border-subtle",
+                    "focus-ring flex min-h-[44px] items-start gap-3 rounded-card border bg-white px-4 py-3 text-left transition-all duration-ui ease-ui",
+                    selected ? "border-accent bg-accent-soft ring-4 ring-accent/10" : "border-line hover:border-subtle",
                   )}
                 >
                   <IconTile icon={option.icon} tone={option.tone} size="md" round />
@@ -93,7 +125,7 @@ export default function Register() {
           </div>
         </fieldset>
         <ErrorNote error={error} />
-        <Button type="submit" size="lg" className="w-full" loading={busy}>
+        <Button type="submit" size="lg" className="w-full" loading={busy} icon="arrowRight">
           {busy ? "Creating account" : "Create account"}
         </Button>
       </form>

@@ -41,7 +41,7 @@ export default function PasswordField({
         <input
           id={inputId}
           name={name}
-          className="min-h-[44px] w-full rounded-ui border border-line bg-surface px-3.5 pr-11 text-sm text-ink placeholder:text-subtle shadow-card transition-colors duration-ui ease-ui hover:border-subtle focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10"
+          className="min-h-[44px] w-full rounded-ui border border-line bg-white px-3.5 pr-11 text-sm text-ink shadow-card placeholder:text-subtle transition-colors duration-ui ease-ui hover:border-subtle focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10"
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
           required={required}

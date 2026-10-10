@@ -24,6 +24,7 @@ import ProjectWorkspace from "./pages/customer/ProjectWorkspace";
 import ProjectsPage from "./pages/customer/ProjectsPage";
 import RfqsTab from "./pages/customer/RfqsTab";
 import VerificationTab from "./pages/customer/VerificationTab";
+import LandingPage from "./pages/market/LandingPage";
 import MarketplaceHome from "./pages/market/MarketplaceHome";
 import VendorDirectory from "./pages/market/VendorDirectory";
 import VendorStorefront from "./pages/market/VendorStorefront";
@@ -78,8 +79,9 @@ export default function App() {
         <Route path="/login" element={user ? <Navigate to={homeFor(user.role)} replace /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to={homeFor(user.role)} replace /> : <Register />} />
 
-        {/* Public storefront */}
+        {/* Public storefront: landing + marketplace (auth required only for ordering / selling) */}
         <Route element={<StorefrontLayout />}>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/marketplace" element={<MarketplaceHome />} />
           <Route path="/marketplace/vendors" element={<VendorDirectory />} />
           <Route path="/marketplace/vendors/:vendorId" element={<VendorStorefront />} />
@@ -126,7 +128,7 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to={ready && user ? homeFor(user.role) : "/marketplace"} replace />} />
+        <Route path="*" element={<Navigate to={ready && user ? homeFor(user.role) : "/"} replace />} />
       </Routes>
     </AuthContext.Provider>
   );

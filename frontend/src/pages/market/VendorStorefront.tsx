@@ -50,8 +50,12 @@ export default function VendorStorefront() {
               </div>
             </div>
             {!user ? (
-              <ButtonLink to="/register" size="lg" icon="file">
-                Sign up to request a quote
+              <ButtonLink to="/register?role=customer&from=/projects" size="lg" icon="file">
+                Sign in to request a quote
+              </ButtonLink>
+            ) : user.role === "customer" || user.role === "admin" ? (
+              <ButtonLink to="/projects" size="lg" icon="file">
+                Request a quote
               </ButtonLink>
             ) : null}
           </div>
